@@ -1,0 +1,5 @@
+*
+!*/
+!*.py
+Old_code/*
+!.gitignore
