@@ -38,26 +38,20 @@ class Camera:
         """Clear cache entries related to a specific property"""
         # Map property names to their corresponding inquiry commands
         property_command_map = {
-            "zoom_pos": self.commands["inq"]["zoom_pos"],
-            "focus_pos": self.commands["inq"]["focus_pos"],
             "backlight": self.commands["inq"]["backlight_mode"],
             "power": self.commands["inq"]["other_block"],
-            "brightness": self.commands["inq"]["brightness"],
-            "contrast": self.commands["inq"]["contrast"],
-            "rgain": self.commands["inq"]["rgain"],
-            "bgain": self.commands["inq"]["bgain"],
-            "color_temp": self.commands["inq"]["color_temp"],
-            "shutter_pos": self.commands["inq"]["shutter_pos"],
-            "iris_pos": self.commands["inq"]["iris_pos"],
-            "bright_pos": self.commands["inq"]["bright_pos"],
-            "aperture_gain": self.commands["inq"]["aperture_gain"],
-            "pan_tilt_pos": self.commands["inq"]["pan_tilt_pos"],
         }
 
         if property_name in property_command_map:
             command = property_command_map[property_name]
-            if command in self._cache:
-                del self._cache[command]
+        else:
+            if property_name in self.commands["inq"]:
+                command = self.commands["inq"][property_name]
+            else:
+                command = None
+
+        if command in self._cache and command is not None:
+            del self._cache[command]
 
     def get_cache_info(self):
         """Get information about current cache state for debugging
