@@ -13,11 +13,49 @@ class Camera:
         self.socket.connect((ip, port))
         self.commands = visca.commands
 
+        # Initialize cache system
         self._cache = {}
-        self._cache_timeout = 0.2
+        self._cache_timeout = 0.2  # 200ms timeout
 
     def _get_cached_value(self, command):
+        """Get cached value if unexpired, otherwise return None"""
+        if command in self._cache:
+            value, timestamp = self._cache[command]
+            if time.time() - timestamp < self._cache_timeout:
+                return value
+            else:
+                # Remove expired cache entry
+                del self._cache[command]
         return None
+
+    def _update_cache(self, command, value):
+        """Update cache with new value and current timestamp"""
+        self._cache[command] = (value, time.time())
+
+    def _clear_cache_for_property(self, property_name):
+        """Clear cache entries related to a specific property"""
+        # Map property names to their corresponding inquiry commands
+        property_command_map = {
+            "zoom_pos": self.commands["inq"]["zoom_pos"],
+            "focus_pos": self.commands["inq"]["focus_pos"],
+            "backlight": self.commands["inq"]["backlight_mode"],
+            "power": self.commands["inq"]["other_block"],
+            "brightness": self.commands["inq"]["brightness"],
+            "contrast": self.commands["inq"]["contrast"],
+            "rgain": self.commands["inq"]["rgain"],
+            "bgain": self.commands["inq"]["bgain"],
+            "color_temp": self.commands["inq"]["color_temp"],
+            "shutter_pos": self.commands["inq"]["shutter_pos"],
+            "iris_pos": self.commands["inq"]["iris_pos"],
+            "bright_pos": self.commands["inq"]["bright_pos"],
+            "aperture_gain": self.commands["inq"]["aperture_gain"],
+            "pan_tilt_pos": self.commands["inq"]["pan_tilt_pos"],
+        }
+
+        if property_name in property_command_map:
+            command = property_command_map[property_name]
+            if command in self._cache:
+                del self._cache[command]
 
     def get_cache_info(self):
         """Get information about current cache state for debugging
@@ -27,10 +65,24 @@ class Camera:
             "expired": expired,
         }
         """
-        pass
+
+        current_time = time.time()
+        cache_info = {}
+
+        for command, (value, timestamp) in self._cache.items():
+            age = current_time - timestamp
+            expired = age >= self._cache_timeout
+            cache_info[command] = {
+                "value": value,
+                "age_ms": age * 1000,
+                "expired": expired,
+            }
+
+        return cache_info
 
     def clear_cache(self):
-        pass
+        """Clear all cached values"""
+        self._cache.clear()
 
     def close(self):
         self.socket.close()
@@ -58,9 +110,20 @@ class Camera:
         return visca.interpret_completion(result)
 
     def inquire(self, command):
+        # First check cache for unexpired value
+        cached_value = self._get_cached_value(command)
+        if cached_value is not None:
+            return cached_value
+
+        # Cache miss or expired - execute the command
         result = self.execute(command)
         # print(result, command)
-        return visca.interpret_inquire(result)
+        interpreted_result = visca.interpret_inquire(result)
+
+        # Update cache with new value
+        self._update_cache(command, interpreted_result)
+
+        return interpreted_result
 
     @property
     def brightness(self):
@@ -87,6 +150,39 @@ class Camera:
         )
         result = self.run(command)
 
+        # If command was successful, update cache
+        if result == "Command Completed":
+            # Update cache with the new value
+            self._update_cache(self.commands["inq"]["brightness"], value)
+        else:
+            # If command failed, clear the cache for this property
+            self._clear_cache_for_property("brightness")
+
+    def brightness_relative(self, delta):
+        """Change brightness by a relative amount. Delta can be positive or negative."""
+        # Get current brightness (uses cache if available)
+        current_brightness = self.brightness
+
+        # Parse current brightness from inquiry result
+        # The inquiry returns a list like ['00', '0a'] for brightness position
+        if isinstance(current_brightness, list) and len(current_brightness) >= 2:
+            current_val = int(current_brightness[0] + current_brightness[1], 16)
+        else:
+            # Fallback - assume current_brightness is already an integer
+            current_val = (
+                int(current_brightness)
+                if isinstance(current_brightness, (int, str))
+                else 0
+            )
+
+        # Calculate new brightness value
+        new_val = max(0, min(255, current_val + delta))
+
+        # Set new brightness value (this will update cache if successful)
+        self.brightness = new_val
+
+        return new_val
+
     @property
     def backlight(self):
         return self.inquire(self.commands["inq"]["backlight_mode"])
@@ -96,6 +192,14 @@ class Camera:
         command = self.commands["backlight"]
         command = command.replace("P", "2" if value else "3")
         result = self.run(command)
+
+        # If command was successful, update cache
+        if result == "Command Completed":
+            # Update cache with the new value
+            self._update_cache(self.commands["inq"]["backlight_mode"], value)
+        else:
+            # If command failed, clear the cache for this property
+            self._clear_cache_for_property("backlight")
 
     @property
     def power(self):
@@ -114,7 +218,10 @@ class Camera:
 
     @zoom_pos.setter
     def zoom_pos(self, value):
+        # First, clear cache for this property
+        self._clear_cache_for_property("zoom_pos")
         self.zoom("direct", value)
+        # Note: zoom method will handle cache update based on its success
 
     @property
     def focus_pos(self):
@@ -122,7 +229,10 @@ class Camera:
 
     @focus_pos.setter
     def focus_pos(self, value):
+        # First, clear cache for this property
+        self._clear_cache_for_property("focus_pos")
         self.focus("direct", value)
+        # Note: focus method will handle cache update based on its success
 
     def off(self):
         self.run(self.commands["power_off"])
@@ -166,7 +276,11 @@ class Camera:
                 "p", "0" * (8 - len(val)) + val
             )
 
-        self.run(command)
+        result = self.run(command)
+
+        # If zoom direct command was successful, update cache
+        if result == "Command Completed" and _type == "direct":
+            self._update_cache(self.commands["inq"]["zoom_pos"], val)
 
     def focus(self, _type="direct", val=-1):
         """
@@ -205,7 +319,11 @@ class Camera:
                 .replace("s", val[3])
             )
         print(command)
-        self.run(command)
+        result = self.run(command)
+
+        # If focus direct command was successful, update cache
+        if result == "Command Completed" and _type == "direct":
+            self._update_cache(self.commands["inq"]["focus_pos"], val)
 
 
 if __name__ == "__main__":
