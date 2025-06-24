@@ -45,11 +45,8 @@ class Camera:
 
     @property
     def brightness(self):
-        return self._brightness
-
-    @brightness.setter
-    def brightness(self, value):
-        return self.commands["brightness"]
+        # TODO: This should query actual brightness using inquiry command
+        return self.commands["brightness_direct"]
 
     @property
     def backlight(self):
@@ -110,9 +107,9 @@ class Camera:
         """
         if _type == "tele" or _type == "wide":
             if val == -1:
-                command = self.commands["zoom" + _type + "std"]
+                command = self.commands["zoom_" + _type + "_std"]
             else:
-                command = self.commands["zoom" + _type + "var"].replace("p", str(val))
+                command = self.commands["zoom_" + _type + "_var"].replace("p", str(val))
         elif _type == "direct":
             if type(val) == int:
                 val = str(hex(val)).lstrip("0x")
@@ -141,9 +138,11 @@ class Camera:
         """
         if _type == "far" or _type == "near":
             if val == -1:
-                command = self.commands["focus" + _type + "std"]
+                command = self.commands["focus_" + _type + "_std"]
             else:
-                command = self.commands["focus" + _type + "var"].replace("p", str(val))
+                command = self.commands["focus_" + _type + "_var"].replace(
+                    "p", str(val)
+                )
         elif _type == "direct":
             if type(val) == int:
                 val = str(hex(val)).lstrip("0x")
@@ -163,15 +162,16 @@ class Camera:
         self.run(command)
 
 
-cam = Camera()
-# cam.off()
+if __name__ == "__main__":
+    cam = Camera()
+    # cam.off()
 
-# cam.on()
+    # cam.on()
 
-print(cam.power)
-print("fp,", cam.focus_pos)
-cam.zoom_pos = "2080309"
-print("xp,", cam.zoom_pos)
-print("fp,", cam.focus_pos)
-cam.focus_pos = 850
-print("fp,", cam.focus_pos)
+    print(cam.power)
+    print("fp,", cam.focus_pos)
+    cam.zoom_pos = "2080309"
+    print("xp,", cam.zoom_pos)
+    print("fp,", cam.focus_pos)
+    cam.focus_pos = 850
+    print("fp,", cam.focus_pos)
