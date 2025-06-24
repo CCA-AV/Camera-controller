@@ -160,28 +160,24 @@ class Camera:
             # If command failed, clear the cache for this property
             self._clear_cache_for_property("brightness")
 
-    def brightness_relative(self, delta):
+    def property_relative(self, property_name, delta):
         """Change brightness by a relative amount. Delta can be positive or negative."""
         # Get current brightness (uses cache if available)
-        current_brightness = self.brightness
+        current_state = getattr(self, property_name)
 
         # Parse current brightness from inquiry result
         # The inquiry returns a list like ['00', '0a'] for brightness position
-        if isinstance(current_brightness, list) and len(current_brightness) >= 2:
-            current_val = int(current_brightness[0] + current_brightness[1], 16)
+        if isinstance(current_state, list):
+            current_val = int("".join(current_state), 16)
+        elif isinstance(current_state, str):
+            current_val = int(current_state, 16)
         else:
-            # Fallback - assume current_brightness is already an integer
-            current_val = (
-                int(current_brightness)
-                if isinstance(current_brightness, (int, str))
-                else 0
-            )
+            current_val = current_state
 
-        # Calculate new brightness value
-        new_val = max(0, min(255, current_val + delta))
+        new_val = current_val + delta
 
         # Set new brightness value (this will update cache if successful)
-        self.brightness = new_val
+        setattr(self, property_name, new_val)
 
         return new_val
 
