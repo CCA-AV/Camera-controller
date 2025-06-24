@@ -8,7 +8,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from controller import Camera
-import visca
 
 
 class TestCamera:
@@ -44,8 +43,9 @@ class TestCamera:
             )
             mock_socket.connect.assert_called_once_with(("192.168.0.25", 1259))
 
-            # Verify camera has access to VISCA commands
-            assert cam.commands == visca.commands
+            # Verify camera has access to VISCA commands via parser
+            assert cam.commands is not None
+            assert cam.parser is not None
 
     def test_camera_initialization_default_params(self, mock_socket):
         """Test camera initialization with default parameters"""
@@ -80,13 +80,13 @@ class TestCamera:
         """Test power on command sends correct VISCA command"""
         with patch.object(camera, "run") as mock_run:
             camera.on()
-            mock_run.assert_called_once_with(visca.commands["power_on"])
+            mock_run.assert_called_once_with(camera.commands["power_on"])
 
     def test_power_off_command(self, camera):
         """Test power off command sends correct VISCA command"""
         with patch.object(camera, "run") as mock_run:
             camera.off()
-            mock_run.assert_called_once_with(visca.commands["power_off"])
+            mock_run.assert_called_once_with(camera.commands["power_off"])
 
     def test_power_property_inquiry(self, camera):
         """Test power property queries the correct VISCA inquiry command"""
@@ -95,7 +95,7 @@ class TestCamera:
 
             result = camera.power
 
-            mock_inquire.assert_called_once_with(visca.commands["inq"]["other_block"])
+            mock_inquire.assert_called_once_with(camera.commands["inq"]["other_block"])
 
     def test_backlight_property_inquiry(self, camera):
         """Test backlight property queries the correct VISCA inquiry command"""
@@ -105,7 +105,7 @@ class TestCamera:
             result = camera.backlight
 
             mock_inquire.assert_called_once_with(
-                visca.commands["inq"]["backlight_mode"]
+                camera.commands["inq"]["backlight_mode"]
             )
 
     def test_backlight_setter(self, camera):
@@ -113,12 +113,12 @@ class TestCamera:
         with patch.object(camera, "run") as mock_run:
             # Test setting backlight on
             camera.backlight = True
-            expected_command = visca.commands["backlight"].replace("P", "2")
+            expected_command = camera.commands["backlight"].replace("P", "2")
             mock_run.assert_called_with(expected_command)
 
             # Test setting backlight off
             camera.backlight = False
-            expected_command = visca.commands["backlight"].replace("P", "3")
+            expected_command = camera.commands["backlight"].replace("P", "3")
             mock_run.assert_called_with(expected_command)
 
     def test_zoom_pos_property(self, camera):
@@ -128,7 +128,7 @@ class TestCamera:
 
             result = camera.zoom_pos
 
-            mock_inquire.assert_called_once_with(visca.commands["inq"]["zoom_pos"])
+            mock_inquire.assert_called_once_with(camera.commands["inq"]["zoom_pos"])
 
     def test_zoom_pos_setter(self, camera):
         """Test zoom position setter calls zoom method correctly"""
@@ -143,7 +143,7 @@ class TestCamera:
 
             result = camera.focus_pos
 
-            mock_inquire.assert_called_once_with(visca.commands["inq"]["focus_pos"])
+            mock_inquire.assert_called_once_with(camera.commands["inq"]["focus_pos"])
 
     def test_focus_pos_setter(self, camera):
         """Test focus position setter calls focus method correctly"""
@@ -157,7 +157,7 @@ class TestCamera:
             camera.zoom("direct", 1000)
 
             # Integer should be converted to hex and padded to 8 digits
-            expected_command = visca.commands["zoom_direct"].replace("p", "000003e8")
+            expected_command = camera.commands["zoom_direct"].replace("p", "000003e8")
             mock_run.assert_called_once_with(expected_command)
 
     def test_zoom_direct_hex_string_value(self, camera):
@@ -166,33 +166,33 @@ class TestCamera:
             camera.zoom("direct", "2080309")
 
             # Hex string should be padded to 8 digits
-            expected_command = visca.commands["zoom_direct"].replace("p", "02080309")
+            expected_command = camera.commands["zoom_direct"].replace("p", "02080309")
             mock_run.assert_called_once_with(expected_command)
 
     def test_zoom_tele_standard(self, camera):
         """Test zoom tele standard speed"""
         with patch.object(camera, "run") as mock_run:
             camera.zoom("tele")
-            mock_run.assert_called_once_with(visca.commands["zoom_tele_std"])
+            mock_run.assert_called_once_with(camera.commands["zoom_tele_std"])
 
     def test_zoom_tele_variable(self, camera):
         """Test zoom tele variable speed"""
         with patch.object(camera, "run") as mock_run:
             camera.zoom("tele", 5)
-            expected_command = visca.commands["zoom_tele_var"].replace("p", "5")
+            expected_command = camera.commands["zoom_tele_var"].replace("p", "5")
             mock_run.assert_called_once_with(expected_command)
 
     def test_zoom_wide_standard(self, camera):
         """Test zoom wide standard speed"""
         with patch.object(camera, "run") as mock_run:
             camera.zoom("wide")
-            mock_run.assert_called_once_with(visca.commands["zoom_wide_std"])
+            mock_run.assert_called_once_with(camera.commands["zoom_wide_std"])
 
     def test_zoom_wide_variable(self, camera):
         """Test zoom wide variable speed"""
         with patch.object(camera, "run") as mock_run:
             camera.zoom("wide", 3)
-            expected_command = visca.commands["zoom_wide_var"].replace("p", "3")
+            expected_command = camera.commands["zoom_wide_var"].replace("p", "3")
             mock_run.assert_called_once_with(expected_command)
 
     def test_focus_direct_int_value(self, camera):
@@ -203,7 +203,7 @@ class TestCamera:
             # Integer should be converted to hex and formatted correctly
             hex_val = "0352"  # 850 in hex, padded to 4 digits
             expected_command = (
-                visca.commands["focus_direct"]
+                camera.commands["focus_direct"]
                 .replace("p", hex_val[0])
                 .replace("q", hex_val[1])
                 .replace("r", hex_val[2])
@@ -219,7 +219,7 @@ class TestCamera:
             # Hex string should be padded to 4 digits
             hex_val = "0abc"
             expected_command = (
-                visca.commands["focus_direct"]
+                camera.commands["focus_direct"]
                 .replace("p", hex_val[0])
                 .replace("q", hex_val[1])
                 .replace("r", hex_val[2])
@@ -231,32 +231,32 @@ class TestCamera:
         """Test focus far standard speed"""
         with patch.object(camera, "run") as mock_run:
             camera.focus("far")
-            mock_run.assert_called_once_with(visca.commands["focus_far_std"])
+            mock_run.assert_called_once_with(camera.commands["focus_far_std"])
 
     def test_focus_far_variable(self, camera):
         """Test focus far variable speed"""
         with patch.object(camera, "run") as mock_run:
             camera.focus("far", 4)
-            expected_command = visca.commands["focus_far_var"].replace("p", "4")
+            expected_command = camera.commands["focus_far_var"].replace("p", "4")
             mock_run.assert_called_once_with(expected_command)
 
     def test_focus_near_standard(self, camera):
         """Test focus near standard speed"""
         with patch.object(camera, "run") as mock_run:
             camera.focus("near")
-            mock_run.assert_called_once_with(visca.commands["focus_near_std"])
+            mock_run.assert_called_once_with(camera.commands["focus_near_std"])
 
     def test_focus_near_variable(self, camera):
         """Test focus near variable speed"""
         with patch.object(camera, "run") as mock_run:
             camera.focus("near", 2)
-            expected_command = visca.commands["focus_near_var"].replace("p", "2")
+            expected_command = camera.commands["focus_near_var"].replace("p", "2")
             mock_run.assert_called_once_with(expected_command)
 
     def test_run_method_command_completion(self, camera):
         """Test run method executes command and returns interpretation"""
         with patch.object(camera, "execute") as mock_execute:
-            with patch("visca.interpret_completion") as mock_interpret:
+            with patch.object(camera.parser, "interpret_completion") as mock_interpret:
                 mock_execute.return_value = "9051ff"  # Command Completed
                 mock_interpret.return_value = "Command Completed"
 
@@ -272,7 +272,7 @@ class TestCamera:
         """Test inquire method calls correct VISCA interpretation"""
         camera.socket.recv.return_value = bytes.fromhex("90500102ff")
 
-        with patch("visca.interpret_inquire") as mock_interpret:
+        with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
             mock_interpret.return_value = ["01", "02"]
 
             result = camera.inquire("81090447ff")
@@ -305,7 +305,7 @@ class TestCamera:
             result = camera.brightness
 
             # Verify it called inquire with correct command
-            mock_inquire.assert_called_once_with(visca.commands["inq"]["brightness"])
+            mock_inquire.assert_called_once_with(camera.commands["inq"]["brightness"])
 
             # Verify it returns the inquiry result
             assert result == ["0a", "0b"]
@@ -340,14 +340,14 @@ class TestCameraEdgeCases:
         with patch.object(camera, "run") as mock_run:
             # Test with maximum zoom value (67108864 decimal = 4000000 hex)
             camera.zoom("direct", 67108864)
-            expected_command = visca.commands["zoom_direct"].replace("p", "04000000")
+            expected_command = camera.commands["zoom_direct"].replace("p", "04000000")
             mock_run.assert_called_once_with(expected_command)
 
     def test_zoom_direct_with_zero_value(self, camera):
         """Test zoom direct with zero value"""
         with patch.object(camera, "run") as mock_run:
             camera.zoom("direct", 0)
-            expected_command = visca.commands["zoom_direct"].replace("p", "00000000")
+            expected_command = camera.commands["zoom_direct"].replace("p", "00000000")
             mock_run.assert_called_once_with(expected_command)
 
     def test_focus_direct_with_max_value(self, camera):
@@ -357,7 +357,7 @@ class TestCameraEdgeCases:
             camera.focus("direct", 1770)
             hex_val = "06ea"
             expected_command = (
-                visca.commands["focus_direct"]
+                camera.commands["focus_direct"]
                 .replace("p", hex_val[0])
                 .replace("q", hex_val[1])
                 .replace("r", hex_val[2])
@@ -370,7 +370,7 @@ class TestCameraEdgeCases:
         with patch.object(camera, "run") as mock_run:
             camera.focus("direct", 0)
             expected_command = (
-                visca.commands["focus_direct"]
+                camera.commands["focus_direct"]
                 .replace("p", "0")
                 .replace("q", "0")
                 .replace("r", "0")
@@ -383,12 +383,12 @@ class TestCameraEdgeCases:
         with patch.object(camera, "run") as mock_run:
             # Test minimum speed
             camera.zoom("tele", 0)
-            expected_command = visca.commands["zoom_tele_var"].replace("p", "0")
+            expected_command = camera.commands["zoom_tele_var"].replace("p", "0")
             mock_run.assert_called_with(expected_command)
 
             # Test maximum speed
             camera.zoom("wide", 7)
-            expected_command = visca.commands["zoom_wide_var"].replace("p", "7")
+            expected_command = camera.commands["zoom_wide_var"].replace("p", "7")
             mock_run.assert_called_with(expected_command)
 
     def test_focus_variable_speed_bounds(self, camera):
@@ -396,12 +396,12 @@ class TestCameraEdgeCases:
         with patch.object(camera, "run") as mock_run:
             # Test minimum speed
             camera.focus("far", 0)
-            expected_command = visca.commands["focus_far_var"].replace("p", "0")
+            expected_command = camera.commands["focus_far_var"].replace("p", "0")
             mock_run.assert_called_with(expected_command)
 
             # Test maximum speed
             camera.focus("near", 7)
-            expected_command = visca.commands["focus_near_var"].replace("p", "7")
+            expected_command = camera.commands["focus_near_var"].replace("p", "7")
             mock_run.assert_called_with(expected_command)
 
 

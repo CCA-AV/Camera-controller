@@ -5,13 +5,15 @@ from time import sleep
 
 
 class Camera:
-    def __init__(self, ip="192.168.0.25", port=1259):
+    def __init__(self, ip="192.168.0.25", port=1259, camera_type="ptzoptics"):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+
+        self.parser = visca.ViscaParser(camera_type)
 
         self.ip = ip
         self.port = port
         self.socket.connect((ip, port))
-        self.commands = visca.commands
+        self.commands = self.parser.commands
 
         # Initialize cache system
         self._cache = {}
@@ -103,11 +105,11 @@ class Camera:
 
     def run(self, command):
         result = self.execute(command)
-        print(result, visca.interpret_completion(result))
-        while visca.interpret_completion(result) == "Command Accepted":
+        print(result, self.parser.interpret_completion(result))
+        while self.parser.interpret_completion(result) == "Command Accepted":
             result = self.check()
-            print("r", result, visca.interpret_completion(result))
-        return visca.interpret_completion(result)
+            print("r", result, self.parser.interpret_completion(result))
+        return self.parser.interpret_completion(result)
 
     def inquire(self, command):
         # First check cache for unexpired value
@@ -118,7 +120,7 @@ class Camera:
         # Cache miss or expired - execute the command
         result = self.execute(command)
         # print(result, command)
-        interpreted_result = visca.interpret_inquire(result)
+        interpreted_result = self.parser.interpret_inquire(result)
 
         # Update cache with new value
         self._update_cache(command, interpreted_result)

@@ -2,12 +2,13 @@ import pytest
 from unittest.mock import Mock, patch
 import sys
 import os
+import inspect
 
 # Add parent directory to path so we can import our modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from controller import Camera
-import visca
+from visca import ViscaParser
 
 
 class TestViscaIntegration:
@@ -24,19 +25,31 @@ class TestViscaIntegration:
             cam.socket = mock_socket
             return cam
 
+    @pytest.fixture
+    def default_parser(self):
+        """Create a ViscaParser with the default camera type"""
+        # Get the default camera type from Camera class constructor
+        camera_signature = inspect.signature(Camera.__init__)
+        default_camera_type = camera_signature.parameters["camera_type"].default
+        return ViscaParser(default_camera_type)
+
     def test_power_commands_generate_correct_visca(self, camera):
         """Test that power commands generate correct VISCA hex strings"""
         # Test power on
         with patch.object(camera, "execute") as mock_execute:
             mock_execute.return_value = "9041ff"
-            with patch("visca.interpret_completion", return_value="Command Completed"):
+            with patch.object(
+                camera.parser, "interpret_completion", return_value="Command Completed"
+            ):
                 camera.on()
                 mock_execute.assert_called_with("8101040002ff")
 
         # Test power off
         with patch.object(camera, "execute") as mock_execute:
             mock_execute.return_value = "9041ff"
-            with patch("visca.interpret_completion", return_value="Command Completed"):
+            with patch.object(
+                camera.parser, "interpret_completion", return_value="Command Completed"
+            ):
                 camera.off()
                 mock_execute.assert_called_with("8101040003ff")
 
@@ -55,8 +68,10 @@ class TestViscaIntegration:
         for args, expected_command in test_cases:
             with patch.object(camera, "execute") as mock_execute:
                 mock_execute.return_value = "9041ff"
-                with patch(
-                    "visca.interpret_completion", return_value="Command Completed"
+                with patch.object(
+                    camera.parser,
+                    "interpret_completion",
+                    return_value="Command Completed",
                 ):
                     camera.zoom(*args)
                     mock_execute.assert_called_with(expected_command)
@@ -78,8 +93,10 @@ class TestViscaIntegration:
         for args, expected_command in test_cases:
             with patch.object(camera, "execute") as mock_execute:
                 mock_execute.return_value = "9041ff"
-                with patch(
-                    "visca.interpret_completion", return_value="Command Completed"
+                with patch.object(
+                    camera.parser,
+                    "interpret_completion",
+                    return_value="Command Completed",
                 ):
                     camera.focus(*args)
                     # For focus direct, we need to handle the character replacement
@@ -99,14 +116,18 @@ class TestViscaIntegration:
         # Test backlight on
         with patch.object(camera, "execute") as mock_execute:
             mock_execute.return_value = "9041ff"
-            with patch("visca.interpret_completion", return_value="Command Completed"):
+            with patch.object(
+                camera.parser, "interpret_completion", return_value="Command Completed"
+            ):
                 camera.backlight = True
                 mock_execute.assert_called_with("8101043302ff")
 
         # Test backlight off
         with patch.object(camera, "execute") as mock_execute:
             mock_execute.return_value = "9041ff"
-            with patch("visca.interpret_completion", return_value="Command Completed"):
+            with patch.object(
+                camera.parser, "interpret_completion", return_value="Command Completed"
+            ):
                 camera.backlight = False
                 mock_execute.assert_called_with("8101043303ff")
 
@@ -123,7 +144,9 @@ class TestViscaIntegration:
         for prop_name, expected_command in inquiry_tests:
             with patch.object(camera, "execute") as mock_execute:
                 mock_execute.return_value = "90500102ff"
-                with patch("visca.interpret_inquire", return_value=["01", "02"]):
+                with patch.object(
+                    camera.parser, "interpret_inquire", return_value=["01", "02"]
+                ):
                     if prop_name == "zoom_pos":
                         _ = camera.zoom_pos
                     elif prop_name == "focus_pos":
@@ -135,10 +158,10 @@ class TestViscaIntegration:
 
                     mock_execute.assert_called_with(expected_command)
 
-    def test_visca_command_format_validation(self, camera):
+    def test_visca_command_format_validation(self, camera, default_parser):
         """Test that all VISCA commands follow the correct format"""
         # All VISCA commands should start with 81 and end with ff
-        for command_name, command_hex in visca.commands.items():
+        for command_name, command_hex in default_parser.commands.items():
             if isinstance(command_hex, str):  # Skip nested dicts like "inq"
                 assert command_hex.startswith(
                     "81"
@@ -155,10 +178,10 @@ class TestViscaIntegration:
                         len(command_hex) % 2 == 0
                     ), f"Command {command_name} should have even length (valid hex)"
 
-    def test_visca_inquiry_command_format_validation(self, camera):
+    def test_visca_inquiry_command_format_validation(self, camera, default_parser):
         """Test that all VISCA inquiry commands follow the correct format"""
         # Most inquiry commands should start with 8109 and end with ff
-        for command_name, command_hex in visca.commands["inq"].items():
+        for command_name, command_hex in default_parser.commands["inq"].items():
             if command_hex:  # Skip empty commands
                 # Some special commands may start with different prefixes
                 if command_name not in ["enlargement_block"]:  # Special case
@@ -177,10 +200,10 @@ class TestViscaIntegration:
                         len(command_hex) % 2 == 0
                     ), f"Inquiry {command_name} should have even length (valid hex)"
 
-    def test_camera_uses_correct_visca_commands(self, camera):
-        """Test that Camera class references correct VISCA commands from visca module"""
-        # Verify that camera.commands is the same as visca.commands
-        assert camera.commands is visca.commands
+    def test_camera_uses_correct_visca_commands(self, camera, default_parser):
+        """Test that Camera class references correct VISCA commands from parser"""
+        # Verify that camera.commands is the same as the parser.commands
+        assert camera.commands is default_parser.commands
 
         # Test a few key commands are accessible
         assert "power_on" in camera.commands
@@ -196,10 +219,10 @@ class TestViscaIntegration:
         assert "backlight_mode" in camera.commands["inq"]
         assert "other_block" in camera.commands["inq"]
 
-    def test_hex_parameter_substitution(self, camera):
+    def test_hex_parameter_substitution(self, camera, default_parser):
         """Test that parameter substitution in VISCA commands works correctly"""
         # Test zoom direct parameter substitution
-        base_command = visca.commands["zoom_direct"]  # "81010447pff"
+        base_command = default_parser.commands["zoom_direct"]  # "81010447pff"
 
         # Test with different hex values
         test_values = [
@@ -212,9 +235,9 @@ class TestViscaIntegration:
             result = base_command.replace("p", hex_val)
             assert result == expected
 
-    def test_focus_parameter_substitution(self, camera):
+    def test_focus_parameter_substitution(self, camera, default_parser):
         """Test that focus direct parameter substitution works correctly"""
-        base_command = visca.commands["focus_direct"]  # "810104480p0q0r0sff"
+        base_command = default_parser.commands["focus_direct"]  # "810104480p0q0r0sff"
 
         # Test with 4-digit hex value
         hex_val = "1234"
@@ -227,9 +250,9 @@ class TestViscaIntegration:
         )
         assert result == expected
 
-    def test_backlight_parameter_substitution(self, camera):
+    def test_backlight_parameter_substitution(self, camera, default_parser):
         """Test that backlight parameter substitution works correctly"""
-        base_command = visca.commands["backlight"]  # "810104330Pff"
+        base_command = default_parser.commands["backlight"]  # "810104330Pff"
 
         # Test on/off values
         on_command = base_command.replace("P", "2")
