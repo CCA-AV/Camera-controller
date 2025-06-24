@@ -19,7 +19,7 @@ class ViscaParser:
             raise e
 
     def interpret_completion(self, hex_return):
-        hex_return = hex_return[:3] + "y" + hex_return[4:]
+        hex_return = f"{hex_return[:3]}y{hex_return[4:]}"
         hex_return = hex_return.lower()
         if hex_return not in self.returns.keys():
             return None
@@ -29,9 +29,7 @@ class ViscaParser:
         return result["text"]
 
     def interpret_inquire(self, hex_return):
-        # print(hex_return)
-        result = self.interpret_completion(hex_return)
-        if result:
+        if result := self.interpret_completion(hex_return):
             return result
         hex_return = hex_return.lower()
         for key in self.results:
@@ -42,7 +40,8 @@ class ViscaParser:
 
             returns = []
             if re.match(regex, hex_return):
-                for digit in result["data_digits"]:
-                    returns.append(hex_return[digit[0] : digit[1]])
+                returns.extend(
+                    hex_return[digit[0] : digit[1]] for digit in result["data_digits"]
+                )
                 break
         return returns
