@@ -296,12 +296,19 @@ class TestCamera:
                     mock_off.assert_called_once()
                     mock_on.assert_called_once()
 
-    def test_brightness_property_returns_command(self, camera):
-        """Test brightness property returns the command (as currently implemented)"""
-        # Note: The current implementation appears to have a bug where it returns the command
-        # rather than querying the actual brightness. This test reflects current behavior.
-        result = camera.brightness
-        assert result == visca.commands["brightness_direct"]
+    def test_brightness_property_queries_camera(self, camera):
+        """Test brightness property queries camera and returns inquiry result"""
+        # The brightness property now properly queries the camera with caching
+        with patch.object(camera, "inquire") as mock_inquire:
+            mock_inquire.return_value = ["0a", "0b"]  # Mock brightness inquiry result
+
+            result = camera.brightness
+
+            # Verify it called inquire with correct command
+            mock_inquire.assert_called_once_with(visca.commands["inq"]["brightness"])
+
+            # Verify it returns the inquiry result
+            assert result == ["0a", "0b"]
 
     def test_check_method_sends_empty_command(self, camera):
         """Test check method sends empty command and returns response"""
