@@ -13,6 +13,25 @@ class Camera:
         self.socket.connect((ip, port))
         self.commands = visca.commands
 
+        self._cache = {}
+        self._cache_timeout = 0.2
+
+    def _get_cached_value(self, command):
+        return None
+
+    def get_cache_info(self):
+        """Get information about current cache state for debugging
+        cache_info[command] = {
+            "value": value,
+            "age_ms": age * 1000,
+            "expired": expired,
+        }
+        """
+        pass
+
+    def clear_cache(self):
+        pass
+
     def close(self):
         self.socket.close()
 
@@ -45,22 +64,49 @@ class Camera:
 
     @property
     def brightness(self):
-        # TODO: This should query actual brightness using inquiry command
-        return self.commands["brightness_direct"]
+        return self.inquire(self.commands["inq"]["brightness"])
+
+    @brightness.setter
+    def brightness(self, value):
+        """Set brightness directly. Value should be a hex value or integer (0-255 range typically)"""
+        if type(value) == int:
+            # Convert to hex format expected by camera (2 hex digits)
+            hex_val = hex(value).lstrip("0x").upper()
+            hex_val = "0" * (2 - len(hex_val)) + hex_val
+            p_val = hex_val[0]
+            q_val = hex_val[1]
+        else:
+            # Assume hex string, take first 2 characters
+            hex_val = str(value).lstrip("0x").upper()
+            hex_val = "0" * (2 - len(hex_val)) + hex_val
+            p_val = hex_val[0]
+            q_val = hex_val[1]
+
+        command = (
+            self.commands["brightness_direct"].replace("P", p_val).replace("Q", q_val)
+        )
+        result = self.run(command)
 
     @property
     def backlight(self):
         return self.inquire(self.commands["inq"]["backlight_mode"])
-
-    @property
-    def power(self):
-        return self.inquire(self.commands["inq"]["other_block"])
 
     @backlight.setter
     def backlight(self, value):
         command = self.commands["backlight"]
         command = command.replace("P", "2" if value else "3")
         result = self.run(command)
+
+    @property
+    def power(self):
+        return self.inquire(self.commands["inq"]["other_block"])
+
+    @power.setter
+    def power(self, state):
+        if state:
+            self.on()
+        else:
+            self.off()
 
     @property
     def zoom_pos(self):

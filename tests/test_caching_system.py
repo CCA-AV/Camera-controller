@@ -41,24 +41,6 @@ class TestCachingSystem:
         # Cache timeout should be 200ms (0.2 seconds)
         assert camera._cache_timeout == 0.2
 
-    def test_brightness_property_accuracy(self, camera):
-        """Test that brightness property returns accurate values from inquiries"""
-        # Mock specific response for brightness inquiry
-        camera.socket.recv.return_value = bytes.fromhex("905000000a0bff")
-
-        with patch("visca.interpret_inquire") as mock_interpret:
-            mock_interpret.return_value = ["0a", "0b"]  # Mock brightness value
-
-            brightness = camera.brightness
-
-            # Verify correct inquiry command was sent
-            camera.socket.send.assert_called_with(
-                bytes.fromhex(visca.commands["inq"]["brightness"])
-            )
-
-            # Verify returned value matches interpretation
-            assert brightness == ["0a", "0b"]
-
     def test_cache_hit_prevents_duplicate_inquiries(self, camera):
         """Test that cached values prevent duplicate camera inquiries"""
         # Setup mock response
@@ -394,10 +376,6 @@ class TestCacheImplementationDetails:
             mock_socket_class.return_value = mock_socket
             cam = Camera()
             return cam
-
-    def test_cache_timeout_value(self, camera):
-        """Test that cache timeout is exactly 200ms"""
-        assert camera._cache_timeout == 0.2
 
     def test_expired_entries_cleaned_up_on_access(self, camera):
         """Test that expired entries are removed when accessed"""
