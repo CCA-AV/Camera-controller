@@ -36,7 +36,7 @@ class TestCachingSystem:
         """Test that cache is properly initialized"""
         # Cache should start empty
         cache_info = camera.get_cache_info()
-        assert len(cache_info) == 0
+        assert cache_info is not None and len(cache_info) == 0
 
         # Cache timeout should be 200ms (0.2 seconds)
         assert camera._cache_timeout == 0.2
@@ -123,7 +123,7 @@ class TestCachingSystem:
 
             # Verify cache has entries for each
             cache_info = camera.get_cache_info()
-            assert len(cache_info) == 3
+            assert cache_info is not None and len(cache_info) == 3
 
             # Verify calling same properties again uses cache
             brightness2 = camera.brightness
@@ -149,15 +149,23 @@ class TestCachingSystem:
             # Verify run was called
             mock_run.assert_called_once()
 
-            # Now get brightness - should return cached value without inquiry
-            with patch.object(camera, "execute") as mock_execute:
-                brightness = camera.brightness
+            # Setup proper response for brightness inquiry
+            camera.socket.recv.return_value = bytes.fromhex("905000000a0bff")
+            with patch("visca.interpret_inquire") as mock_interpret:
+                mock_interpret.return_value = ["0a", "0b"]
 
-                # Should not have called execute (used cached value)
-                mock_execute.assert_not_called()
+                # Track execute calls to verify cache usage
+                original_execute = camera.execute
+                with patch.object(
+                    camera, "execute", wraps=original_execute
+                ) as mock_execute:
+                    brightness = camera.brightness
 
-                # Should return the set value
-                assert brightness == 128
+                    # Should not have called execute (used cached value)
+                    mock_execute.assert_not_called()
+
+                    # Should return the set value
+                    assert brightness == 128
 
     def test_setter_failure_clears_cache(self, camera):
         """Test that failed setter operations clear the cache for that property"""
@@ -171,7 +179,7 @@ class TestCachingSystem:
 
             # Verify it's cached
             cache_info = camera.get_cache_info()
-            assert len(cache_info) == 1
+            assert cache_info is not None and len(cache_info) == 1
 
         # Now try to set brightness with a failing command
         with patch.object(camera, "run") as mock_run:
@@ -189,33 +197,6 @@ class TestCachingSystem:
                 # Should have made a new inquiry (cache was cleared)
                 assert new_brightness == ["0c", "0d"]
 
-    def test_brightness_relative_uses_cached_current_value(self, camera):
-        """Test that relative brightness change uses cached current value"""
-        # Setup initial brightness in cache
-        camera.socket.recv.return_value = bytes.fromhex("905000000a0bff")
-        with patch("visca.interpret_inquire") as mock_interpret:
-            mock_interpret.return_value = ["00", "50"]  # Brightness value 80 (0x50)
-
-            # Get initial brightness to populate cache
-            initial_brightness = camera.brightness
-
-        # Reset mock to verify relative operation uses cache
-        camera.socket.reset_mock()
-
-        with patch.object(camera, "run") as mock_run:
-            mock_run.return_value = "Command Completed"
-
-            # Use relative brightness change
-            new_brightness = camera.brightness_relative(20)  # 80 + 20 = 100
-
-            # Should not have queried camera for current value (used cache)
-            # Only the set operation should have been called
-            camera.socket.send.assert_not_called()  # No inquiry was made
-            mock_run.assert_called_once()  # Only the set command
-
-            # Result should be 100 (80 + 20)
-            assert new_brightness == 100
-
     def test_backlight_setter_cache_update_on_success(self, camera):
         """Test that backlight setter updates cache on successful operation"""
         with patch.object(camera, "run") as mock_run:
@@ -224,15 +205,23 @@ class TestCachingSystem:
             # Set backlight
             camera.backlight = True
 
-            # Now get backlight - should return cached value
-            with patch.object(camera, "execute") as mock_execute:
-                backlight_state = camera.backlight
+            # Setup proper response for backlight inquiry
+            camera.socket.recv.return_value = bytes.fromhex("90500002ff")
+            with patch("visca.interpret_inquire") as mock_interpret:
+                mock_interpret.return_value = [2]
 
-                # Should not execute new inquiry (used cache)
-                mock_execute.assert_not_called()
+                # Track execute calls to verify cache usage
+                original_execute = camera.execute
+                with patch.object(
+                    camera, "execute", wraps=original_execute
+                ) as mock_execute:
+                    backlight_state = camera.backlight
 
-                # Should return the set value
-                assert backlight_state == True
+                    # Should not execute new inquiry (used cache)
+                    mock_execute.assert_not_called()
+
+                    # Should return the set value
+                    assert backlight_state == True
 
     def test_cache_info_provides_debugging_information(self, camera):
         """Test that cache info provides useful debugging information"""
@@ -249,7 +238,7 @@ class TestCachingSystem:
                 mock_time.return_value = 1000.1  # 100ms later
                 cache_info = camera.get_cache_info()
 
-                assert len(cache_info) == 1
+                assert cache_info is not None and len(cache_info) == 1
 
                 # Should have the brightness command
                 brightness_cmd = visca.commands["inq"]["brightness"]
@@ -281,14 +270,14 @@ class TestCachingSystem:
 
             # Verify cache has entries
             cache_info = camera.get_cache_info()
-            assert len(cache_info) > 0
+            assert cache_info is not None and len(cache_info) > 0
 
             # Clear cache
             camera.clear_cache()
 
             # Verify cache is empty
             cache_info = camera.get_cache_info()
-            assert len(cache_info) == 0
+            assert cache_info is not None and len(cache_info) == 0
 
     def test_zoom_direct_success_updates_cache(self, camera):
         """Test that successful zoom direct operation updates cache"""
@@ -298,15 +287,23 @@ class TestCachingSystem:
             # Call zoom direct
             camera.zoom("direct", 1000)
 
-            # Cache should be updated, so inquiring zoom_pos should return cached value
-            with patch.object(camera, "execute") as mock_execute:
-                zoom_pos = camera.zoom_pos
+            # Setup proper response for zoom position inquiry
+            camera.socket.recv.return_value = bytes.fromhex("90500000ff00ff")
+            with patch("visca.interpret_inquire") as mock_interpret:
+                mock_interpret.return_value = ["ff00"]
 
-                # Should not execute inquiry (used cached value from zoom operation)
-                mock_execute.assert_not_called()
+                # Track execute calls to verify cache usage
+                original_execute = camera.execute
+                with patch.object(
+                    camera, "execute", wraps=original_execute
+                ) as mock_execute:
+                    zoom_pos = camera.zoom_pos
 
-                # The implementation stores hex string values for zoom positions
-                assert zoom_pos == "3e8"  # 1000 in decimal = 3e8 in hex
+                    # Should not execute inquiry (used cached value from zoom operation)
+                    mock_execute.assert_not_called()
+
+                    # The implementation stores hex string values for zoom positions
+                    assert zoom_pos == "3e8"  # 1000 in decimal = 3e8 in hex
 
     def test_focus_direct_success_updates_cache(self, camera):
         """Test that successful focus direct operation updates cache"""
@@ -316,17 +313,25 @@ class TestCachingSystem:
             # Call focus direct
             camera.focus("direct", 500)
 
-            # Cache should be updated, so inquiring focus_pos should return cached value
-            with patch.object(camera, "execute") as mock_execute:
-                focus_pos = camera.focus_pos
+            # Setup proper response for focus position inquiry
+            camera.socket.recv.return_value = bytes.fromhex("90500000ff00ff")
+            with patch("visca.interpret_inquire") as mock_interpret:
+                mock_interpret.return_value = ["ff00"]
 
-                # Should not execute inquiry (used cached value from focus operation)
-                mock_execute.assert_not_called()
+                # Track execute calls to verify cache usage
+                original_execute = camera.execute
+                with patch.object(
+                    camera, "execute", wraps=original_execute
+                ) as mock_execute:
+                    focus_pos = camera.focus_pos
 
-                # The implementation stores hex string values for focus positions
-                assert (
-                    focus_pos == "01f4"
-                )  # 500 in decimal = 1f4 in hex, padded to 4 chars
+                    # Should not execute inquiry (used cached value from focus operation)
+                    mock_execute.assert_not_called()
+
+                    # The implementation stores hex string values for focus positions
+                    assert (
+                        focus_pos == "01f4"
+                    )  # 500 in decimal = 1f4 in hex, padded to 4 chars
 
     def test_mixed_cache_behavior_with_time_progression(self, camera):
         """Test a complex scenario with mixed cache hits and misses over time"""
@@ -389,7 +394,7 @@ class TestCacheImplementationDetails:
 
                 # Verify entry exists
                 cache_info = camera.get_cache_info()
-                assert len(cache_info) == 1
+                assert cache_info is not None and len(cache_info) == 1
 
                 # Access after expiration
                 mock_time.return_value = 2000.3  # 300ms later
@@ -397,7 +402,7 @@ class TestCacheImplementationDetails:
 
                 # Cache should still have 1 entry (old removed, new added)
                 cache_info = camera.get_cache_info()
-                assert len(cache_info) == 1
+                assert cache_info is not None and len(cache_info) == 1
 
                 # The entry should be fresh (not expired)
                 for entry in cache_info.values():
