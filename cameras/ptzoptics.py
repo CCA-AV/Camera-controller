@@ -1,123 +1,463 @@
 commands = {
-    "power_on": "8101040002ff",
-    "power_off": "8101040003ff",
-    "zoom_stop": "8101040700ff",
-    "zoom_tele_std": "8101040702ff",
-    "zoom_wide_std": "8101040703ff",
-    "zoom_tele_var": "810104072pff",
-    "zoom_wide_var": "810104073pff",
-    "zoom_direct": "81010447pff",
-    "focus_stop": "8101040800ff",
-    "focus_far_std": "8101040802ff",
-    "focus_near_std": "8101040803ff",
-    "focus_far_var": "810104082pff",
-    "focus_near_var": "810104083pff",
-    "focus_direct": "810104480p0q0r0sff",
-    "pan_up": "81010601VW0301ff",  # VV: Pan speed, WW: Tilt speed
-    "pan_down": "81010601VW0302ff",
-    "pan_left": "81010601VW0103ff",
-    "pan_right": "81010601VW0203ff",
-    "pan_up_left": "81010601VW0101ff",
-    "pan_up_right": "81010601VW0201ff",
-    "pan_down_left": "81010601VW0102ff",
-    "pan_down_right": "81010601VW0202ff",
-    "pan_stop": "81010601VW0303ff",
-    "pan_direct_abs": "81010602VW0A0B0C0D0Q0R0S0Tff",  # ABCD Pan Pos, QRST Tilt pos
-    "pan_direct_rel": "81010603VW0A0B0C0D0Q0R0S0Tff",
-    "pan_home": "81010604ff",
-    "pan_reset": "81010605ff",
-    "brightness_direct": "810104A100000P0Qff",  # PQ Brightness pos
-    "contrast_direct": "810104A200000P0Qff",  # PQ Contrast pos
-    "color_gain": "810104490000000Pff",  # Color gain setting 0h (60%) to Eh (200%)
-    "wb_auto": "8101043500ff",
-    "wb_auto_sensitivity": "810104A90Pff",  # P: 0: High, 1: Normal, 2: Low
-    "wb_indoor": "8101043501ff",
-    "wb_outdoor": "8101043502ff",
-    "wb_onepush": "8101043503ff",
-    "wb_manual": "8101043505ff",
-    "wb_color_temp": "8101043520ff",
-    "color_temp_reset": "8101042000ff",
-    "color_temp_up": "8101042002ff",
-    "color_temp_down": "8101042003ff",
-    "color_temp_direct": "810104200P0Qff",  # PQ Color temp position: 0x00:2500K ~ 0x37: 8000K
-    "wb_onepush_trigger": "8101041005ff",
-    "ae_full_auto": "8101043900ff",  # Auto exposure
-    "ae_full_manual": "8101043900ff",  # Manual
-    "ae_full_shutter_priority": "8101043900ff",  # Auto shutter priority exposure
-    "ae_full_iris_priority": "8101043900ff",  # Auto iris priority exposure
-    "ae_bright": "8101043900ff",  # Bright mode (manual control)
-    "iris_reset": "8101040B00ff",
-    "iris_up": "8101040B02ff",
-    "iris_down": "8101040B03ff",
-    "iris_direct": "8101044B00000P0Qff",  # PQ iris position
-    "shutter_reset": "8101040A00ff",
-    "shutter_up": "8101040A02ff",
-    "shutter_down": "8101040A03ff",
-    "shutter_direct": "8101044A00000P0Qff",  # PQ shutter position
-    "rgain_reset": "8101040300ff",
-    "rgain_up": "8101040302ff",
-    "rgain_down": "8101040303ff",
-    "rgain_direct": "8101044300000P0Qff",  # PQ r gain
-    "bgain_reset": "8101040400ff",
-    "bgain_up": "8101040402ff",
-    "bgain_down": "8101040403ff",
-    "bgain_direct": "8101044400000P0Qff",  # PQ b gain
-    "gain_reset": "8101040C00ff",
-    "gain_up": "8101040C02ff",
-    "gain_down": "8101040C03ff",
-    "gain_direct": "8101044C00000P0Qff",  # PQ gain position
-    "gain_limit": "8101042C0Pff",  # P gain position
-    "bright_reset": "8101040D00ff",
-    "bright_up": "8101040D02ff",
-    "bright_down": "8101040D03ff",
-    "bright_direct": "8101044D00000P0Qff",  # PQ bright position
-    "flip_off": "810104A400ff",
-    "flip_h": "810104A401ff",
-    "flip_v": "810104A402ff",
-    "flip_hv": "810104A403ff",
-    "lr_reverse_on": "8101046102ff",  # flip lr
-    "lr_reverse_off": "8101046103ff",
-    "ud_reverse_on": "8101046602ff",  # flip vertical
-    "ud_reverse_off": "8101046603ff",
-    "save_settings": "810104A510ff",
-    "preset_reset": "8101043f00Pff",  # PP mem number (0-127)
-    "preset_set": "8101043f01Pff",  # PP mem number (0-127)
-    "preset_recall": "8101043f02Pff",  # PP mem number (0-127)
-    "preset_recall_speed": "81010601Pff",  # PP speed grade, 0x01~0x18
-    "backlight": "810104330Pff",  # P 2 On, 3 off
-    "flicker": "810104230Pff",  # P flicker settings, (0: Off, 1: 50Hz, 2: 60Hz)
-    "aperture_auto": "8101040502ff",
-    "aperture_manual": "8101040503ff",
-    "aperture_reset": "8101040200ff",
-    "aperture_up": "8101040202ff",
-    "aperture_down": "8101040203ff",
-    "aperture_direct": "8101044200000P0Qff",  # PQ aperture gain
-    "picture_effect_off": "8101046300ff",
-    "picture_effect_bw": "8101046304ff",
-    "setting_save": "810104Af10ff",
-    "af_zone_top": "810104AA00ff",
-    "af_zone_center": "810104AA01ff",
-    "af_zone_bottom": "810104AA02ff",
-    "color_hue": "8101044f0000000Pff",  # P: 0h (-14deg) to Eh (+14deg)
-    "osd_toggle": "8101043f025fff",
-    "osd_up": "810106010E0E0301ff",
-    "osd_down": "810106010E0E0302ff",
-    "osd_left": "810106010E0E0103ff",
-    "osd_right": "810106010E0E0203ff",
-    "osd_enter": "8101060605ff",
-    "osd_return": "8101060604ff",
-    "af_recalibrate": "810A010310ff",
-    "tally_light": "810A02020Pff",  # P: 1: flashing, 2: on, 3: normal
-    "ndi_high": "810B0101ff",
-    "ndi_medium": "810B0102ff",
-    "ndi_low": "810B0103ff",
-    "ndi_off": "810B0104ff",
-    "multicast_mode": "810B01230Pff",  # P: 1: on, 2: off
-    "motion_sync_on": "810A111302ff",
-    "motion_sync_off": "810A111303ff",
-    "motion_sync_max": "810A1114Pff",  # P: speed stage
-    "motion_sync_min": "810A1114Pff",
-    "usb_audio_toggle": "812A02A0040Pff",  # P: 2: on, 3: off
+    "power_on": {"command": "8101040002ff", "parameters": []},
+    "power_off": {"command": "8101040003ff", "parameters": []},
+    "zoom_stop": {"command": "8101040700ff", "parameters": []},
+    "zoom_tele_std": {"command": "8101040702ff", "parameters": []},
+    "zoom_wide_std": {"command": "8101040703ff", "parameters": []},
+    "zoom_tele_var": {
+        "command": "810104072pff",
+        "parameters": [
+            {"name": "position", "type": "int", "min": 0, "max": 7, "length": 1}
+        ],
+    },
+    "zoom_wide_var": {
+        "command": "810104073pff",
+        "parameters": [
+            {"name": "position", "type": "int", "min": 0, "max": 7, "length": 1}
+        ],
+    },
+    "zoom_direct": {
+        "command": "81010447pff",
+        "parameters": [
+            {
+                "name": "position",
+                "type": "int",
+                "min": 0,
+                "max": 67108864,
+                "length": 8,
+            }
+        ],
+    },
+    "focus_stop": {"command": "8101040800ff", "parameters": []},
+    "focus_far_std": {"command": "8101040802ff", "parameters": []},
+    "focus_near_std": {"command": "8101040803ff", "parameters": []},
+    "focus_far_var": {
+        "command": "810104082pff",
+        "parameters": [
+            {"name": "position", "type": "int", "min": 0, "max": 7, "length": 1}
+        ],
+    },
+    "focus_near_var": {
+        "command": "810104083pff",
+        "parameters": [
+            {"name": "position", "type": "int", "min": 0, "max": 7, "length": 1}
+        ],
+    },
+    "focus_direct": {
+        "command": "810104480p0p0p0pff",
+        "parameters": [
+            {
+                "name": "position",
+                "type": "int",
+                "min": 0,
+                "max": 1770,
+                "length": 1,
+                "splits": 4,
+            }
+        ],
+    },
+    "pan_up": {
+        "command": "81010601pp0301ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_down": {
+        "command": "81010601pp0302ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_left": {
+        "command": "81010601pp0103ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_right": {
+        "command": "81010601pp0203ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_up_left": {
+        "command": "81010601pp0101ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_up_right": {
+        "command": "81010601pp0201ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_down_left": {
+        "command": "81010601pp0102ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_down_right": {
+        "command": "81010601pp0202ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_stop": {
+        "command": "81010601pp0303ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
+    "pan_direct_abs": {
+        "command": "81010602pp0p0p0p0p0p0p0p0pff",  # ABCD Pan Pos, QRST Tilt pos
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {
+                "name": "pan_pos",
+                "type": "int",
+                "min": 0,
+                "max": 65535,
+                "length": 1,
+                "splits": 4,
+            },
+            {
+                "name": "tilt_pos",
+                "type": "int",
+                "min": 0,
+                "max": 65535,
+                "length": 1,
+                "splits": 4,
+            },
+        ],
+    },
+    "pan_direct_rel": {
+        "command": "81010603pp0p0p0p0p0p0p0p0pff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {
+                "name": "pan_pos",
+                "type": "int",
+                "min": 0,
+                "max": 65535,
+                "length": 1,
+                "splits": 4,
+            },
+            {
+                "name": "tilt_pos",
+                "type": "int",
+                "min": 0,
+                "max": 65535,
+                "length": 1,
+                "splits": 4,
+            },
+        ],
+    },
+    "pan_home": {"command": "81010604ff", "parameters": []},
+    "pan_reset": {"command": "81010605ff", "parameters": []},
+    "brightness_direct": {
+        "command": "810104A100000p0pff",
+        "parameters": [
+            {
+                "name": "brightness",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },
+    "contrast_direct": {
+        "command": "810104A200000p0pff",
+        "parameters": [
+            {
+                "name": "contrast",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },
+    "color_gain": {
+        "command": "810104490000000pff",
+        "parameters": [
+            {"name": "color_gain", "type": "int", "min": 0, "max": 14, "length": 1},
+        ],
+    },
+    "wb_auto": {"command": "8101043500ff", "parameters": []},
+    "wb_auto_sensitivity": {  # P: 0: High, 1: Normal, 2: Low
+        "command": "810104A90pff",
+        "parameters": [
+            {"name": "sensitivity", "type": "int", "min": 0, "max": 2, "length": 1},
+        ],
+    },
+    "wb_indoor": {"command": "8101043501ff", "parameters": []},
+    "wb_outdoor": {"command": "8101043502ff", "parameters": []},
+    "wb_onepush": {"command": "8101043503ff", "parameters": []},
+    "wb_manual": {"command": "8101043505ff", "parameters": []},
+    "wb_color_temp": {"command": "8101043520ff", "parameters": []},
+    "color_temp_reset": {"command": "8101042000ff", "parameters": []},
+    "color_temp_up": {"command": "8101042002ff", "parameters": []},
+    "color_temp_down": {"command": "8101042003ff", "parameters": []},
+    "color_temp_direct": {
+        "command": "810104200p0pff",
+        "parameters": [
+            {
+                "name": "color_temp",
+                "type": "int",
+                "min": 0,
+                "max": 55,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },
+    "wb_onepush_trigger": {"command": "8101041005ff", "parameters": []},
+    "ae_full_auto": {"command": "8101043900ff", "parameters": []},  # Auto exposure
+    "ae_full_manual": {"command": "8101043900ff", "parameters": []},  # Manual
+    "ae_full_shutter_priority": {
+        "command": "8101043900ff",
+        "parameters": [],
+    },  # Auto shutter priority exposure
+    "ae_full_iris_priority": {
+        "command": "8101043900ff",
+        "parameters": [],
+    },  # Auto iris priority exposure
+    "ae_bright": {
+        "command": "8101043900ff",
+        "parameters": [],
+    },  # Bright mode (manual control)
+    "iris_reset": {"command": "8101040B00ff", "parameters": []},
+    "iris_up": {"command": "8101040B02ff", "parameters": []},
+    "iris_down": {"command": "8101040B03ff", "parameters": []},
+    "iris_direct": {
+        "command": "8101044B00000p0pff",
+        "parameters": [
+            {
+                "name": "iris_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ iris position
+    "shutter_reset": {"command": "8101040A00ff", "parameters": []},
+    "shutter_up": {"command": "8101040A02ff", "parameters": []},
+    "shutter_down": {"command": "8101040A03ff", "parameters": []},
+    "shutter_direct": {
+        "command": "8101044A00000p0pff",
+        "parameters": [
+            {
+                "name": "shutter_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ shutter position
+    "rgain_reset": {"command": "8101040300ff", "parameters": []},
+    "rgain_up": {"command": "8101040302ff", "parameters": []},
+    "rgain_down": {"command": "8101040303ff", "parameters": []},
+    "rgain_direct": {
+        "command": "8101044300000p0pff",
+        "parameters": [
+            {
+                "name": "rgain_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ r gain
+    "bgain_reset": {"command": "8101040400ff", "parameters": []},
+    "bgain_up": {"command": "8101040402ff", "parameters": []},
+    "bgain_down": {"command": "8101040403ff", "parameters": []},
+    "bgain_direct": {
+        "command": "8101044400000p0pff",
+        "parameters": [
+            {
+                "name": "bgain_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ b gain
+    "gain_reset": {"command": "8101040C00ff", "parameters": []},
+    "gain_up": {"command": "8101040C02ff", "parameters": []},
+    "gain_down": {"command": "8101040C03ff", "parameters": []},
+    "gain_direct": {
+        "command": "8101044C00000p0pff",
+        "parameters": [
+            {
+                "name": "gain_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ gain position
+    "gain_limit": {
+        "command": "8101042C0pff",
+        "parameters": [
+            {"name": "gain_limit", "type": "int", "min": 0, "max": 255, "length": 1},
+        ],
+    },  # P gain position
+    "bright_reset": {"command": "8101040D00ff", "parameters": []},
+    "bright_up": {"command": "8101040D02ff", "parameters": []},
+    "bright_down": {"command": "8101040D03ff", "parameters": []},
+    "bright_direct": {
+        "command": "8101044D00000p0pff",
+        "parameters": [
+            {
+                "name": "bright_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ bright position
+    "flip_off": {"command": "810104A400ff", "parameters": []},
+    "flip_h": {"command": "810104A401ff", "parameters": []},
+    "flip_v": {"command": "810104A402ff", "parameters": []},
+    "flip_hv": {"command": "810104A403ff", "parameters": []},
+    "lr_reverse_on": {"command": "8101046102ff", "parameters": []},  # flip lr
+    "lr_reverse_off": {"command": "8101046103ff", "parameters": []},
+    "ud_reverse_on": {"command": "8101046602ff", "parameters": []},  # flip vertical
+    "ud_reverse_off": {"command": "8101046603ff", "parameters": []},
+    "save_settings": {"command": "810104A510ff", "parameters": []},
+    "preset_reset": {
+        "command": "8101043f00pff",
+        "parameters": [
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+        ],
+    },  # PP mem number (0-127)
+    "preset_set": {
+        "command": "8101043f01pff",
+        "parameters": [
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+        ],
+    },  # PP mem number (0-127)
+    "preset_recall": {
+        "command": "8101043f02pff",
+        "parameters": [
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+        ],
+    },  # PP mem number (0-127)
+    "preset_recall_speed": {
+        "command": "81010601pff",
+        "parameters": [
+            {"name": "speed_grade", "type": "int", "min": 1, "max": 24, "length": 1},
+        ],
+    },  # PP speed grade, 0x01~0x18
+    "backlight": {
+        "command": "810104330pff",
+        "parameters": [
+            {"name": "backlight", "type": "int", "min": 2, "max": 3, "length": 1}
+        ],
+    },  # P 2 On, 3 off
+    "flicker": {
+        "command": "810104230pff",
+        "parameters": [
+            {"name": "flicker", "type": "int", "min": 0, "max": 2, "length": 1}
+        ],
+    },  # P flicker settings, (0: Off, 1: 50Hz, 2: 60Hz)
+    "aperture_auto": {"command": "8101040502ff", "parameters": []},
+    "aperture_manual": {"command": "8101040503ff", "parameters": []},
+    "aperture_reset": {"command": "8101040200ff", "parameters": []},
+    "aperture_up": {"command": "8101040202ff", "parameters": []},
+    "aperture_down": {"command": "8101040203ff", "parameters": []},
+    "aperture_direct": {
+        "command": "8101044200000p0pff",
+        "parameters": [
+            {
+                "name": "aperture_pos",
+                "type": "int",
+                "min": 0,
+                "max": 255,
+                "length": 1,
+                "splits": 2,
+            },
+        ],
+    },  # PQ aperture gain
+    "picture_effect_off": {"command": "8101046300ff", "parameters": []},
+    "picture_effect_bw": {"command": "8101046304ff", "parameters": []},
+    "setting_save": {"command": "810104Af10ff", "parameters": []},
+    "af_zone_top": {"command": "810104AA00ff", "parameters": []},
+    "af_zone_center": {"command": "810104AA01ff", "parameters": []},
+    "af_zone_bottom": {"command": "810104AA02ff", "parameters": []},
+    "color_hue": {
+        "command": "8101044f0000000pff",
+        "parameters": [
+            {"name": "color_hue", "type": "int", "min": 0, "max": 22, "length": 1}
+        ],
+    },  # P: 0h (-14deg) to Eh (+14deg)
+    "osd_toggle": {"command": "8101043f025fff", "parameters": []},
+    "osd_up": {"command": "810106010E0E0301ff", "parameters": []},
+    "osd_down": {"command": "810106010E0E0302ff", "parameters": []},
+    "osd_left": {"command": "810106010E0E0103ff", "parameters": []},
+    "osd_right": {"command": "810106010E0E0203ff", "parameters": []},
+    "osd_enter": {"command": "8101060605ff", "parameters": []},
+    "osd_return": {"command": "8101060604ff", "parameters": []},
+    "af_recalibrate": {"command": "810A010310ff", "parameters": []},
+    "tally_light": {
+        "command": "810A02020pff",
+        "parameters": [
+            {"name": "tally_light", "type": "int", "min": 1, "max": 3, "length": 1}
+        ],
+    },  # P: 1: flashing, 2: on, 3: normal
+    "ndi_high": {"command": "810B0101ff", "parameters": []},
+    "ndi_medium": {"command": "810B0102ff", "parameters": []},
+    "ndi_low": {"command": "810B0103ff", "parameters": []},
+    "ndi_off": {"command": "810B0104ff", "parameters": []},
+    "multicast_mode": {
+        "command": "810B01230pff",
+        "parameters": [
+            {"name": "multicast_mode", "type": "int", "min": 1, "max": 2, "length": 1}
+        ],
+    },  # P: 1: on, 2: off
+    "motion_sync_on": {"command": "810A111302ff", "parameters": []},
+    "motion_sync_off": {"command": "810A111303ff", "parameters": []},
+    "motion_sync_max": {
+        "command": "810A1114pff",
+        "parameters": [
+            {"name": "motion_sync_max", "type": "int", "min": 1, "max": 2, "length": 1}
+        ],
+    },  # P: speed stage
+    "motion_sync_min": {"command": "810A1114pff", "parameters": []},
+    "usb_audio_toggle": {
+        "command": "812A02A0040pff",
+        "parameters": [
+            {"name": "usb_audio_toggle", "type": "int", "min": 2, "max": 3, "length": 1}
+        ],
+    },  # P: 2: on, 3: off
     "inq": {
         "zoom_pos": "81090447ff",  # Returns: 90500P0Q0R0Sff PQRS zoom position
         "focus_mode": "81090438ff",  # Returns: 905002ff for af, 905003ff for manual

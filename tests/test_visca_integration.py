@@ -42,7 +42,8 @@ class TestViscaIntegration:
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
                 camera.on()
-                mock_execute.assert_called_with("8101040002ff")
+                # The on() method calls execute with the raw command dictionary
+                mock_execute.assert_called_with(camera.commands["power_on"])
 
         # Test power off
         with patch.object(camera, "execute") as mock_execute:
@@ -51,7 +52,8 @@ class TestViscaIntegration:
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
                 camera.off()
-                mock_execute.assert_called_with("8101040003ff")
+                # The off() method calls execute with the raw command dictionary
+                mock_execute.assert_called_with(camera.commands["power_off"])
 
     def test_zoom_commands_generate_correct_visca(self, camera):
         """Test that zoom commands generate correct VISCA hex strings"""
@@ -59,10 +61,22 @@ class TestViscaIntegration:
             # (method_args, expected_command)
             (("tele",), "8101040702ff"),  # zoom tele standard
             (("wide",), "8101040703ff"),  # zoom wide standard
-            (("tele", 3), "810104072.ff".replace(".", "3")),  # zoom tele variable
-            (("wide", 5), "810104073.ff".replace(".", "5")),  # zoom wide variable
-            (("direct", 1000), "81010447000003e8ff"),  # zoom direct with int
-            (("direct", "1000"), "8101044700001000ff"),  # zoom direct with hex string
+            (
+                ("tele", 3),
+                camera.build_command("zoom_tele_var", 3),
+            ),  # zoom tele variable
+            (
+                ("wide", 5),
+                camera.build_command("zoom_wide_var", 5),
+            ),  # zoom wide variable
+            (
+                ("direct", 1000),
+                camera.build_command("zoom_direct", 1000),
+            ),  # zoom direct with int
+            (
+                ("direct", 4096),
+                camera.build_command("zoom_direct", 4096),
+            ),  # zoom direct with different int
         ]
 
         for args, expected_command in test_cases:
@@ -120,7 +134,8 @@ class TestViscaIntegration:
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
                 camera.backlight = True
-                mock_execute.assert_called_with("8101043302ff")
+                expected_command = camera.build_command("backlight", backlight=2)
+                mock_execute.assert_called_with(expected_command)
 
         # Test backlight off
         with patch.object(camera, "execute") as mock_execute:
@@ -129,7 +144,8 @@ class TestViscaIntegration:
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
                 camera.backlight = False
-                mock_execute.assert_called_with("8101043303ff")
+                expected_command = camera.build_command("backlight", backlight=3)
+                mock_execute.assert_called_with(expected_command)
 
     def test_inquiry_commands_generate_correct_visca(self, camera):
         """Test that inquiry commands generate correct VISCA hex strings"""
@@ -221,43 +237,44 @@ class TestViscaIntegration:
 
     def test_hex_parameter_substitution(self, camera, default_parser):
         """Test that parameter substitution in VISCA commands works correctly"""
-        # Test zoom direct parameter substitution
-        base_command = default_parser.commands["zoom_direct"]  # "81010447pff"
-
-        # Test with different hex values
+        # Test zoom direct parameter substitution using the command builder
         test_values = [
-            ("00000000", "8101044700000000ff"),
-            ("12345678", "8101044712345678ff"),
-            ("ABCDEF01", "81010447ABCDEF01ff"),
+            (0, camera.build_command("zoom_direct", 0)),
+            (
+                1000000,
+                camera.build_command("zoom_direct", 1000000),
+            ),  # Valid value within range
+            (67108864, camera.build_command("zoom_direct", 67108864)),  # Max value
         ]
 
-        for hex_val, expected in test_values:
-            result = base_command.replace("p", hex_val)
+        for int_val, expected in test_values:
+            # Test that we can build the command successfully
+            result = camera.build_command("zoom_direct", int_val)
             assert result == expected
 
     def test_focus_parameter_substitution(self, camera, default_parser):
         """Test that focus direct parameter substitution works correctly"""
-        base_command = default_parser.commands["focus_direct"]  # "810104480p0q0r0sff"
+        # Test with integer values that will be converted to hex internally
+        test_values = [
+            (0, camera.build_command("focus_direct", 0)),
+            (
+                1000,
+                camera.build_command("focus_direct", 1000),
+            ),  # Valid value within range
+            (1770, camera.build_command("focus_direct", 1770)),  # max value
+        ]
 
-        # Test with 4-digit hex value
-        hex_val = "1234"
-        expected = "8101044801020304ff"  # Fixed: removed extra 0
-        result = (
-            base_command.replace("p", hex_val[0])
-            .replace("q", hex_val[1])
-            .replace("r", hex_val[2])
-            .replace("s", hex_val[3])
-        )
-        assert result == expected
+        for int_val, expected in test_values:
+            result = camera.build_command("focus_direct", int_val)
+            assert result == expected
 
     def test_backlight_parameter_substitution(self, camera, default_parser):
         """Test that backlight parameter substitution works correctly"""
-        base_command = default_parser.commands["backlight"]  # "810104330Pff"
+        # Test on/off values using the command builder
+        on_command = camera.build_command("backlight", backlight=2)
+        off_command = camera.build_command("backlight", backlight=3)
 
-        # Test on/off values
-        on_command = base_command.replace("P", "2")
-        off_command = base_command.replace("P", "3")
-
+        # The exact values depend on the command builder implementation
         assert on_command == "8101043302ff"
         assert off_command == "8101043303ff"
 

@@ -96,8 +96,11 @@ def run_visca_validation():
 
         # Test command format validation
         command_count = 0
-        for command_name, command_hex in commands.items():
-            if isinstance(command_hex, str):  # Skip nested dicts
+        for command_name, command_data in commands.items():
+            if (
+                isinstance(command_data, dict) and "command" in command_data
+            ):  # New dict format
+                command_hex = command_data["command"]
                 assert command_hex.startswith(
                     "81"
                 ), f"Command {command_name} should start with 81"
@@ -127,8 +130,10 @@ def run_visca_validation():
                 ):
                     assert (
                         len(command_hex) % 2 == 0
-                    ), f"Command {command_name} should have even length"
+                    ), f"Command {command_name} should have even length (valid hex)"
                 command_count += 1
+            elif isinstance(command_data, str):  # Legacy string format (skip for now)
+                pass  # Skip string commands - they're legacy or special cases
 
         print(f"✓ Validated {command_count} VISCA commands format")
 
@@ -172,10 +177,12 @@ def run_visca_validation():
 
         print(f"✓ Validated {inquiry_count} VISCA inquiry commands format")
 
-        # Test parameter substitution
-        zoom_cmd = commands["zoom_direct"]
-        test_result = zoom_cmd.replace("p", "12345678")
-        expected = "8101044712345678ff"
+        # Test parameter substitution using the command builder
+        from controller import Camera
+
+        cam = Camera()
+        test_result = cam.build_command("zoom_direct", 1000)  # Simple test value
+        expected = "81010447000003e8ff"  # 1000 in hex = 3e8, padded to 8 chars
         assert (
             test_result == expected
         ), f"Parameter substitution failed: {test_result} != {expected}"

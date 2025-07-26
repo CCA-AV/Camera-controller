@@ -9,6 +9,8 @@ class Camera:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
 
         self.parser = visca.ViscaParser(camera_type)
+        self.builder = visca.ViscaCommandBuilder(camera_type)
+        self.build_command = self.builder.build_command
 
         self.ip = ip
         self.port = port
@@ -124,19 +126,9 @@ class Camera:
 
     @brightness.setter
     def brightness(self, value):
-        """Set brightness directly. Value should be a hex value or integer (0-255 range typically)"""
-        if type(value) == int:
-            # Convert to hex format expected by camera (2 hex digits)
-            hex_val = hex(value).lstrip("0x").upper()
-        else:
-            # Assume hex string, take first 2 characters
-            hex_val = str(value).lstrip("0x").upper()
-        hex_val = "0" * (2 - len(hex_val)) + hex_val
-        q_val = hex_val[1]
-        p_val = hex_val[0]
-        command = (
-            self.commands["brightness_direct"].replace("P", p_val).replace("Q", q_val)
-        )
+        """Set brightness directly. Value should be an integer (0-255 range typically)"""
+
+        command = self.build_command("brightness_direct", value)
         result = self.run(command)
 
         # If command was successful, update cache
@@ -174,8 +166,7 @@ class Camera:
 
     @backlight.setter
     def backlight(self, value):
-        command = self.commands["backlight"]
-        command = command.replace("P", "2" if value else "3")
+        command = self.build_command("backlight", backlight=2 if value else 3)
         result = self.run(command)
 
         # If command was successful, update cache
@@ -248,15 +239,11 @@ class Camera:
         """
         if _type in ["tele", "wide"]:
             if val == -1:
-                command = self.commands[f"zoom_{_type}_std"]
+                command = self.build_command(f"zoom_{_type}_std")
             else:
-                command = self.commands[f"zoom_{_type}_var"].replace("p", str(val))
+                command = self.build_command(f"zoom_{_type}_var", val)
         elif _type == "direct":
-            val = hex(val).lstrip("0x") if type(val) == int else str(val.lstrip("0x"))
-            print(val, "0" * (8 - len(val)) + val)
-            command = self.commands["zoom_direct"].replace(
-                "p", "0" * (8 - len(val)) + val
-            )
+            command = self.build_command("zoom_direct", val)
 
         result = self.run(command)
 
@@ -280,25 +267,12 @@ class Camera:
         """
         if _type in ["far", "near"]:
             if val == -1:
-                command = self.commands[f"focus_{_type}_std"]
+                command = self.build_command(f"focus_{_type}_std")
             else:
-                command = self.commands[f"focus_{_type}_var"].replace("p", str(val))
+                command = self.build_command(f"focus_{_type}_var", val)
         elif _type == "direct":
-            if type(val) == int:
-                val = hex(val).lstrip("0x")
-            else:
-                val = str(val.lstrip("0x"))
-                if len(val) > 4:
-                    val = val[0] + val[2] + val[4]
-            val = "0" * (4 - len(val)) + val
-            command = (
-                self.commands["focus_direct"]
-                .replace("p", val[0])
-                .replace("q", val[1])
-                .replace("r", val[2])
-                .replace("s", val[3])
-            )
-        print(command)
+            command = self.build_command("focus_direct", val)
+
         result = self.run(command)
 
         # If focus direct command was successful, update cache

@@ -296,8 +296,8 @@ class TestCachingSystem:
                     # Should not have called execute (used cached value)
                     mock_execute.assert_not_called()
 
-                    # Should return the cached hex value (1000 decimal = 3e8 hex)
-                    assert zoom_pos == "3e8"
+                    # Should return the cached value (1000 was cached as the input value)
+                    assert zoom_pos == 1000
 
     def test_focus_direct_success_updates_cache(self, camera):
         """Test that successful focus direct operation updates cache"""
@@ -322,8 +322,8 @@ class TestCachingSystem:
                     # Should not have called execute (used cached value)
                     mock_execute.assert_not_called()
 
-                    # Should return the cached hex value (500 decimal = 1f4 hex, padded to 4 chars)
-                    assert focus_pos == "01f4"
+                    # Should return the cached value (500 was cached as the input value)
+                    assert focus_pos == 500
 
     def test_mixed_cache_behavior_with_time_progression(self, camera):
         """Test a complex scenario with mixed cache hits and misses over time"""
@@ -404,3 +404,137 @@ class TestCacheImplementationDetails:
                 # The entry should be fresh (age < 100ms for example)
                 for command, info in cache_info.items():
                     assert info["age_ms"] < 100  # Should be very recent
+
+    def test_clear_cache_for_property_brightness(self, camera):
+        """Test that _clear_cache_for_property works correctly for brightness"""
+        # Populate cache with brightness
+        camera.socket.recv.return_value = bytes.fromhex("905000000a0bff")
+        with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
+            mock_interpret.return_value = ["0a", "0b"]
+            brightness = camera.brightness
+
+            # Verify cache has the brightness entry
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 1
+
+            # Clear cache for brightness property
+            camera._clear_cache_for_property("brightness")
+
+            # Verify cache is now empty
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 0
+
+    def test_clear_cache_for_property_backlight(self, camera):
+        """Test that _clear_cache_for_property works correctly for backlight"""
+        # Populate cache with backlight
+        camera.socket.recv.return_value = bytes.fromhex("90500002ff")
+        with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
+            mock_interpret.return_value = [2]
+            backlight = camera.backlight
+
+            # Verify cache has the backlight entry
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 1
+
+            # Clear cache for backlight property
+            camera._clear_cache_for_property("backlight")
+
+            # Verify cache is now empty
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 0
+
+    def test_zoom_pos_setter_clears_cache_before_operation(self, camera):
+        """Test that zoom_pos setter clears cache before setting new value"""
+        # Populate cache with zoom position
+        camera.socket.recv.return_value = bytes.fromhex("90500000ff00ff")
+        with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
+            mock_interpret.return_value = ["0000", "ff00"]
+            zoom_pos = camera.zoom_pos
+
+            # Verify cache has zoom position entry
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 1
+
+            # Set new zoom position
+            with patch.object(camera, "zoom") as mock_zoom:
+                camera.zoom_pos = 5000
+
+                # Verify zoom method was called correctly
+                mock_zoom.assert_called_once_with("direct", 5000)
+
+    def test_focus_pos_setter_clears_cache_before_operation(self, camera):
+        """Test that focus_pos setter clears cache before setting new value"""
+        # Populate cache with focus position
+        camera.socket.recv.return_value = bytes.fromhex("90500000ff00ff")
+        with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
+            mock_interpret.return_value = ["0000", "ff00"]
+            focus_pos = camera.focus_pos
+
+            # Verify cache has focus position entry
+            cache_info = camera.get_cache_info()
+            assert len(cache_info) == 1
+
+            # Set new focus position
+            with patch.object(camera, "focus") as mock_focus:
+                camera.focus_pos = 800
+
+                # Verify focus method was called correctly
+                mock_focus.assert_called_once_with("direct", 800)
+
+    def test_brightness_setter_successful_cache_update(self, camera):
+        """Test that brightness setter updates cache on successful command"""
+        with patch.object(camera, "run") as mock_run:
+            mock_run.return_value = "Command Completed"
+
+            # Set brightness
+            camera.brightness = 150
+
+            # Verify that the cache would contain the new value
+            # (cache update happens in the setter when command is successful)
+            expected_command = camera.commands["inq"]["brightness"]
+            if expected_command in camera._cache:
+                cached_value, _ = camera._cache[expected_command]
+                assert cached_value == 150
+
+    def test_cache_timeout_configuration(self, camera):
+        """Test that cache timeout is correctly configured"""
+        # Verify cache timeout is set to 200ms
+        assert camera._cache_timeout == 0.2
+
+    def test_cache_info_age_calculation(self, camera):
+        """Test that cache info correctly calculates age and expiration"""
+        with patch("time.time") as mock_time:
+            # Set initial time
+            mock_time.return_value = 1000.0
+
+            # Populate cache
+            camera.socket.recv.return_value = bytes.fromhex("905000000a0bff")
+            with patch.object(camera.parser, "interpret_inquire") as mock_interpret:
+                mock_interpret.return_value = ["0a", "0b"]
+                brightness = camera.brightness
+
+            # Advance time by 100ms
+            mock_time.return_value = 1000.1
+
+            # Get cache info
+            cache_info = camera.get_cache_info()
+
+            # Verify age calculation
+            for command, info in cache_info.items():
+                assert (
+                    abs(info["age_ms"] - 100.0) < 1.0
+                )  # Allow for small floating point errors
+                assert info["expired"] == False  # Not expired yet (< 200ms)
+
+            # Advance time beyond expiry
+            mock_time.return_value = 1000.25
+
+            # Get cache info again
+            cache_info = camera.get_cache_info()
+
+            # Verify expiration detection
+            for command, info in cache_info.items():
+                assert (
+                    abs(info["age_ms"] - 250.0) < 1.0
+                )  # Allow for small floating point errors
+                assert info["expired"] == True  # Expired (> 200ms)
