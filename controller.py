@@ -44,11 +44,10 @@ class Camera:
 
         if property_name in property_command_map:
             command = property_command_map[property_name]
+        elif property_name in self.commands["inq"]:
+            command = self.commands["inq"][property_name]
         else:
-            if property_name in self.commands["inq"]:
-                command = self.commands["inq"][property_name]
-            else:
-                command = None
+            command = None
 
         if command in self._cache and command is not None:
             del self._cache[command]
@@ -87,15 +86,13 @@ class Camera:
         data = bytes.fromhex(command)
         self.socket.send(data)
 
-        back = self.socket.recv(256).hex()
-        return back
+        return self.socket.recv(256).hex()
 
     def check(self):
         data = bytes.fromhex("")
         self.socket.send(data)
 
-        back = self.socket.recv(256).hex()
-        return back
+        return self.socket.recv(256).hex()
 
     def run(self, command):
         result = self.execute(command)
@@ -131,16 +128,12 @@ class Camera:
         if type(value) == int:
             # Convert to hex format expected by camera (2 hex digits)
             hex_val = hex(value).lstrip("0x").upper()
-            hex_val = "0" * (2 - len(hex_val)) + hex_val
-            p_val = hex_val[0]
-            q_val = hex_val[1]
         else:
             # Assume hex string, take first 2 characters
             hex_val = str(value).lstrip("0x").upper()
-            hex_val = "0" * (2 - len(hex_val)) + hex_val
-            p_val = hex_val[0]
-            q_val = hex_val[1]
-
+        hex_val = "0" * (2 - len(hex_val)) + hex_val
+        q_val = hex_val[1]
+        p_val = hex_val[0]
         command = (
             self.commands["brightness_direct"].replace("P", p_val).replace("Q", q_val)
         )
@@ -253,16 +246,13 @@ class Camera:
             MIN: 0
             MAX: 7
         """
-        if _type == "tele" or _type == "wide":
+        if _type in ["tele", "wide"]:
             if val == -1:
-                command = self.commands["zoom_" + _type + "_std"]
+                command = self.commands[f"zoom_{_type}_std"]
             else:
-                command = self.commands["zoom_" + _type + "_var"].replace("p", str(val))
+                command = self.commands[f"zoom_{_type}_var"].replace("p", str(val))
         elif _type == "direct":
-            if type(val) == int:
-                val = str(hex(val)).lstrip("0x")
-            else:
-                val = str(val.lstrip("0x"))
+            val = hex(val).lstrip("0x") if type(val) == int else str(val.lstrip("0x"))
             print(val, "0" * (8 - len(val)) + val)
             command = self.commands["zoom_direct"].replace(
                 "p", "0" * (8 - len(val)) + val
@@ -288,16 +278,14 @@ class Camera:
             MIN: 0
             MAX: 7
         """
-        if _type == "far" or _type == "near":
+        if _type in ["far", "near"]:
             if val == -1:
-                command = self.commands["focus_" + _type + "_std"]
+                command = self.commands[f"focus_{_type}_std"]
             else:
-                command = self.commands["focus_" + _type + "_var"].replace(
-                    "p", str(val)
-                )
+                command = self.commands[f"focus_{_type}_var"].replace("p", str(val))
         elif _type == "direct":
             if type(val) == int:
-                val = str(hex(val)).lstrip("0x")
+                val = hex(val).lstrip("0x")
             else:
                 val = str(val.lstrip("0x"))
                 if len(val) > 4:
@@ -314,6 +302,8 @@ class Camera:
         result = self.run(command)
 
         # If focus direct command was successful, update cache
+        if result == "Command Completed" and _type == "direct":
+            self._update_cache(self.commands["inq"]["focus_pos"], val)
         if result == "Command Completed" and _type == "direct":
             self._update_cache(self.commands["inq"]["focus_pos"], val)
 
