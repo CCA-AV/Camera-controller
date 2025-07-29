@@ -1,7 +1,6 @@
 import visca
 import socket
 import time
-from time import sleep
 
 
 class Camera:
