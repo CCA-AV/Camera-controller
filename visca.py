@@ -7,7 +7,7 @@ class ViscaException(Warning):
     pass
 
 
-class ViscaParser:
+class ViscaBase:
     def __init__(self, camera_type):
         try:
             self.camera_type = importlib.import_module(f"cameras.{camera_type}")
@@ -18,6 +18,31 @@ class ViscaParser:
             warn(f"Failed to import camera type {camera_type}: {e}", ViscaException)
             raise e
 
+    def format_value(self, value, length: int = any):
+        if type(value) == int:
+            # Convert to hex and remove leading 0x
+            value = hex(value).lstrip("0x")
+        else:
+            warn(f"Value {value} is not an integer", ViscaException)
+        if length != any:
+            value = "0" * (length - len(value)) + value
+        return value
+
+    def split_value(self, value, splits: int = 1, length: int = any):
+        if splits > 1:
+            if length == any:
+                length = len(value) // splits
+            if splits * length != len(value):
+                warn(
+                    f"Value {value} is not divisible by {splits} with length {length}, padding with 0s",
+                    ViscaException,
+                )
+                value = "0" * (splits * length - len(value)) + value
+            return [value[i : i + length] for i in range(0, len(value), length)]
+        return [value]
+
+
+class ViscaParser(ViscaBase):
     def interpret_completion(self, hex_return):
         hex_return = f"{hex_return[:3]}y{hex_return[4:]}"
         hex_return = hex_return.lower()
@@ -47,13 +72,7 @@ class ViscaParser:
         return returns
 
 
-class ViscaCommandBuilder:
-    def __init__(self, camera_type):
-        self.camera_type = importlib.import_module(f"cameras.{camera_type}")
-        self.commands = self.camera_type.commands
-        self.returns = self.camera_type.returns
-        self.results = self.camera_type.results
-
+class ViscaCommandBuilder(ViscaBase):
     def build_command(self, command_name, *args, **kwargs):
         command = self.commands[command_name]
         command_str = command["command"]
@@ -66,32 +85,31 @@ class ViscaCommandBuilder:
             )
         for param in params:
             # Pad the value to the required total length
-            total_length = (
-                param["length"] * param["splits"]
-                if "splits" in param
-                else param["length"]
-            )
             if param["name"] in kwargs:
                 value = kwargs[param["name"]]
             else:
                 value = args[param_index]
                 param_index += 1
+
             if value < param["min"] or value > param["max"]:
                 raise ValueError(
                     f"Value {value} is out of range for {param['name']}. Range: {param['min']}-{param['max']}"
                 )
-            if param["type"] == "int":
-                value = hex(value).lstrip("0x")
-            value = "0" * (total_length - len(value)) + value
+
+            total_length = (
+                param["length"] * param["splits"]
+                if "splits" in param
+                else param["length"]
+            )
+            value = self.format_value(value, total_length)
             if "splits" in param:
-                # Split the value into chunks of param["length"]
-                for i in range(param["splits"]):
-                    start_idx = i * param["length"]
-                    end_idx = start_idx + param["length"]
-                    chunk = value[start_idx:end_idx]
-                    real_params.append(chunk)
+                real_params.extend(
+                    self.split_value(value, param["splits"], param["length"])
+                )
             else:
                 real_params.append(value)
+
+        # Replace placeholders with actual values
         for i, param in enumerate(real_params):
             if "p" not in command_str:
                 warn(
@@ -99,6 +117,8 @@ class ViscaCommandBuilder:
                     ViscaException,
                 )
             command_str = command_str.replace("p", param, 1)
+
+        # Check if all placeholders were replaced
         if "p" in command_str:
             warn(
                 f"Command {command_name} not provided enough parameters. Missing parameters: {command_str.count('p')}",
