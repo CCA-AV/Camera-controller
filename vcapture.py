@@ -20,7 +20,7 @@ class vcapture(Process):
 
         if not cap.isOpened():
             warn(f"[vcapture] ERROR: Failed to open video source: {self.target}")
-            self.running.value = False
+            self._running.value = False
             return
 
         try:
