@@ -16,6 +16,21 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
     from tests.test_camera import TestCamera, TestCameraEdgeCases
     from tests.test_visca_integration import TestViscaIntegration
+    from tests.test_vcapture import (
+        TestVcaptureInit,
+        TestVcaptureProperties,
+        TestVcaptureRun,
+        TestVcaptureRelease,
+    )
+    from tests.test_rtsp_feed import (
+        TestRtspFeedClose,
+        TestRtspFeedIntegration,
+        TestRtspFeedFrameProcessing,
+        TestRtspFeedConstants,
+        TestRtspFeedMocks,
+        TestRtspFeedMainExecution,
+        TestRtspFeedErrorHandling,
+    )
 
     print("✓ Successfully imported test modules")
 except ImportError as e:
@@ -197,6 +212,79 @@ def run_visca_validation():
     return True
 
 
+def run_vcapture_tests():
+    """Run vcapture module tests"""
+    print("\n" + "=" * 60)
+    print("RUNNING VCAPTURE TESTS")
+    print("=" * 60)
+
+    try:
+        # Create a test suite for vcapture tests
+        loader = unittest.TestLoader()
+        suite = unittest.TestSuite()
+
+        # Add all vcapture test classes
+        suite.addTests(loader.loadTestsFromTestCase(TestVcaptureInit))
+        suite.addTests(loader.loadTestsFromTestCase(TestVcaptureProperties))
+        suite.addTests(loader.loadTestsFromTestCase(TestVcaptureRun))
+        suite.addTests(loader.loadTestsFromTestCase(TestVcaptureRelease))
+
+        # Run the tests
+        runner = unittest.TextTestRunner(verbosity=1, stream=sys.stdout)
+        result = runner.run(suite)
+
+        if result.wasSuccessful():
+            print("✓ All vcapture tests PASSED!")
+            return True
+        else:
+            print(
+                f"✗ vcapture tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
+            )
+            return False
+
+    except Exception as e:
+        print(f"✗ vcapture test execution failed: {e}")
+        return False
+
+
+def run_rtsp_feed_tests():
+    """Run rtsp_feed module tests"""
+    print("\n" + "=" * 60)
+    print("RUNNING RTSP FEED TESTS")
+    print("=" * 60)
+
+    try:
+        # Create a test suite for rtsp_feed tests
+        loader = unittest.TestLoader()
+        suite = unittest.TestSuite()
+
+        # Add all rtsp_feed test classes
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedClose))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedIntegration))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedFrameProcessing))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedConstants))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedMocks))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedMainExecution))
+        suite.addTests(loader.loadTestsFromTestCase(TestRtspFeedErrorHandling))
+
+        # Run the tests
+        runner = unittest.TextTestRunner(verbosity=1, stream=sys.stdout)
+        result = runner.run(suite)
+
+        if result.wasSuccessful():
+            print("✓ All rtsp_feed tests PASSED!")
+            return True
+        else:
+            print(
+                f"✗ rtsp_feed tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
+            )
+            return False
+
+    except Exception as e:
+        print(f"✗ rtsp_feed test execution failed: {e}")
+        return False
+
+
 def main():
     """Main test runner"""
     print("Camera Controller Test Runner")
@@ -210,6 +298,14 @@ def main():
 
     # Run VISCA validation tests
     if not run_visca_validation():
+        success = False
+
+    # Run vcapture tests
+    if not run_vcapture_tests():
+        success = False
+
+    # Run rtsp_feed tests
+    if not run_rtsp_feed_tests():
         success = False
 
     print("\n" + "=" * 60)
