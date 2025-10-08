@@ -1,11 +1,12 @@
 import visca
 import socket
 import time
+import importlib
 
 
 class Camera:
     def __init__(self, ip="192.168.0.25", port=1259, camera_type="ptzoptics"):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+        self.camera_lib = importlib.import_module(f"cameras.{camera_type}")
 
         self.parser = visca.ViscaParser(camera_type)
         self.builder = visca.ViscaCommandBuilder(camera_type)
@@ -13,7 +14,8 @@ class Camera:
 
         self.ip = ip
         self.port = port
-        self.socket.connect((ip, port))
+
+        self.socket = self.camera_lib.connect(ip, port)
         self.commands = self.parser.commands
 
         # Initialize cache system

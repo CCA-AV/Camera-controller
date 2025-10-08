@@ -536,3 +536,10 @@ results = {
     "": {"data_digits": [[]]},
     "": {"data_digits": [[]]},
 }
+
+
+def connect(ip, port):
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+    sock.connect((ip, port))
+    return sock
