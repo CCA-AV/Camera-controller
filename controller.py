@@ -342,6 +342,133 @@ class Camera:
         """
         self.move(_type, tilt_speed=tilt_speed, tilt=tilt, pan=self.inquire(self.commands["inq"]["pan_tilt_pos"][0]))
 
+    def pan_up(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_up_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_up_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_stop(self):
+        command = self.build_command(f"pan_stop", 0, 0)
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
+        
+    "pan_stop": {
+        "command": "81010601pp0303ff",
+        "parameters": [
+            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
+        ],
+    },
 
 if __name__ == "__main__":
     cam = Camera()
