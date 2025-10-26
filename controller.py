@@ -99,10 +99,10 @@ class Camera:
 
     def run(self, command):
         result = self.execute(command)
-        print(result, self.parser.interpret_completion(result))
+        # print(result, self.parser.interpret_completion(result))
         while self.parser.interpret_completion(result) == "Command Accepted":
             result = self.check()
-            print("r", result, self.parser.interpret_completion(result))
+            # print("r", result, self.parser.interpret_completion(result))
         return self.parser.interpret_completion(result)
 
     def inquire(self, command):
@@ -461,14 +461,6 @@ class Camera:
         
         if result == "Command Completed":
             self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
-        
-    "pan_stop": {
-        "command": "81010601pp0303ff",
-        "parameters": [
-            {"name": "pan_speed", "type": "int", "min": 0, "max": 255, "length": 2},
-            {"name": "tilt_speed", "type": "int", "min": 0, "max": 255, "length": 2},
-        ],
-    },
 
 if __name__ == "__main__":
     cam = Camera()
@@ -478,4 +470,3 @@ if __name__ == "__main__":
 
     print(cam.power)
     print("pos,", cam.pan_tilt_pos)
-    print(self.g
