@@ -356,25 +356,25 @@ commands = {
     "preset_reset": {
         "command": "8101043f00pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_set": {
         "command": "8101043f01pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_recall": {
         "command": "8101043f02pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_recall_speed": {
         "command": "81010601pff",
         "parameters": [
-            {"name": "speed_grade", "type": "int", "min": 1, "max": 24, "length": 1},
+            {"name": "speed_grade", "type": "int", "min": 1, "max": 24, "length": 2},
         ],
     },  # PP speed grade, 0x01~0x18
     "backlight": {

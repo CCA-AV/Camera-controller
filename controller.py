@@ -462,6 +462,24 @@ class Camera:
         if result == "Command Completed":
             self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
 
+    def preset_recall(self, preset):
+        """
+        "preset_recall": {
+        "command": "8101043f02pff",
+        "parameters": [
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+        ],
+        },  # PP mem number (0-127)
+        """
+        
+        command = self.build_command(f"preset_recall", preset)
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
+
+        
 if __name__ == "__main__":
     cam = Camera()
     # cam.off()
