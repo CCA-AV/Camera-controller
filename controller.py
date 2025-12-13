@@ -102,7 +102,8 @@ class Camera:
         # print(result, self.parser.interpret_completion(result))
         while self.parser.interpret_completion(result) == "Command Accepted":
             result = self.check()
-            # print("r", result, self.parser.interpret_completion(result))
+            time.sleep(0.1)
+            #print("r", result, self.parser.interpret_completion(result))
         return self.parser.interpret_completion(result)
 
     def inquire(self, command):
@@ -284,6 +285,14 @@ class Camera:
         if result == "Command Completed" and _type == "direct":
             self._update_cache(self.commands["inq"]["focus_pos"], val)
 
+    def focus_mode(self, mode=None):
+        if mode:
+            command = self.build_command(f"focus_mode_{mode}")            
+        else:
+            command = self.build_command(f"af_toggle")
+        
+        result = self.run(command)
+
     def move(self, _type="abs", pan=-1, tilt=-1, pan_speed=10, tilt_speed=10):
         """
         move(type, value)
@@ -462,6 +471,29 @@ class Camera:
         if result == "Command Completed":
             self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
 
+    def zoom_stop(self):
+        command = self.build_command("zoom_stop")
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["zoom_pos"], self.inquire(self.commands["inq"]["zoom_pos"]))
+
+    def focus_stop(self):
+        command = self.build_command("focus_stop")
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["focus_pos"], self.inquire(self.commands["inq"]["focus_pos"]))
+
+    
+    def preset_set(self, preset):        
+        command = self.build_command(f"preset_set", preset)
+
+        result = self.run(command)
+        
+    
     def preset_recall(self, preset):
         """
         "preset_recall": {
@@ -473,12 +505,9 @@ class Camera:
         """
         
         command = self.build_command(f"preset_recall", preset)
-
+        
         result = self.run(command)
         
-        if result == "Command Completed":
-            self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
-
         
 if __name__ == "__main__":
     cam = Camera()

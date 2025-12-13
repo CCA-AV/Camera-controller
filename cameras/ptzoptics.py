@@ -28,6 +28,9 @@ commands = {
             }
         ],
     },
+    "af_toggle": {"command": "8101043810ff", "parameters": []},
+    "focus_mode_auto": {"command": "8101043802ff", "parameters": []},
+    "focus_mode_manual": {"command": "8101043803ff", "parameters": []},
     "focus_stop": {"command": "8101040800ff", "parameters": []},
     "focus_far_std": {"command": "8101040802ff", "parameters": []},
     "focus_near_std": {"command": "8101040803ff", "parameters": []},
