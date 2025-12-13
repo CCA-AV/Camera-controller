@@ -32,9 +32,9 @@ try:
         TestRtspFeedErrorHandling,
     )
 
-    print("✓ Successfully imported test modules")
+    print("[OK] Successfully imported test modules")
 except ImportError as e:
-    print(f"✗ Failed to import test modules: {e}")
+    print(f"[ERROR] Failed to import test modules: {e}")
     print("Make sure you're running this from the project root directory")
     sys.exit(1)
 
@@ -59,30 +59,30 @@ def run_basic_tests():
             # Test that camera initializes with mock
             assert cam.socket == mock_socket
             assert mock_socket.connect.called
-            print("✓ Camera initialization with mock socket: PASSED")
+            print("[OK] Camera initialization with mock socket: PASSED")
 
             # Test basic command execution
             result = cam.execute("8101040002ff")
             assert result == "9041ff"
-            print("✓ Basic command execution: PASSED")
+            print("[OK] Basic command execution: PASSED")
 
             # Test power on command
             with patch.object(cam, "run") as mock_run:
                 cam.on()
                 mock_run.assert_called_once()
-                print("✓ Power on command: PASSED")
+                print("[OK] Power on command: PASSED")
 
             # Test zoom command with parameter substitution
             with patch.object(cam, "run") as mock_run:
                 cam.zoom("direct", 1000)
                 # Verify the run method was called (actual command validation in full tests)
                 mock_run.assert_called_once()
-                print("✓ Zoom command with parameters: PASSED")
+                print("[OK] Zoom command with parameters: PASSED")
 
-            print("\n✓ All basic tests PASSED!")
+            print("\n[OK] All basic tests PASSED!")
 
     except Exception as e:
-        print(f"✗ Basic test failed: {e}")
+        print(f"[FAIL] Basic test failed: {e}")
         return False
 
     return True
@@ -102,7 +102,7 @@ def run_visca_validation():
         # Get the default camera type from Camera class constructor
         camera_signature = inspect.signature(Camera.__init__)
         default_camera_type = camera_signature.parameters["camera_type"].default
-        print(f"✓ Using camera type: {default_camera_type}")
+        print(f"[OK] Using camera type: {default_camera_type}")
 
         # Create ViscaParser with the default camera type
         parser = ViscaParser(default_camera_type)
@@ -150,7 +150,7 @@ def run_visca_validation():
             elif isinstance(command_data, str):  # Legacy string format (skip for now)
                 pass  # Skip string commands - they're legacy or special cases
 
-        print(f"✓ Validated {command_count} VISCA commands format")
+        print(f"[OK] Validated {command_count} VISCA commands format")
 
         # Test inquiry command format validation
         inquiry_count = 0
@@ -190,7 +190,7 @@ def run_visca_validation():
                     ), f"Inquiry {command_name} should have even length"
                 inquiry_count += 1
 
-        print(f"✓ Validated {inquiry_count} VISCA inquiry commands format")
+        print(f"[OK] Validated {inquiry_count} VISCA inquiry commands format")
 
         # Test parameter substitution using the command builder
         from controller import Camera
@@ -201,12 +201,12 @@ def run_visca_validation():
         assert (
             test_result == expected
         ), f"Parameter substitution failed: {test_result} != {expected}"
-        print("✓ Parameter substitution validation: PASSED")
+        print("[OK] Parameter substitution validation: PASSED")
 
-        print("\n✓ All VISCA validation tests PASSED!")
+        print("\n[OK] All VISCA validation tests PASSED!")
 
     except Exception as e:
-        print(f"✗ VISCA validation failed: {e}")
+        print(f"[FAIL] VISCA validation failed: {e}")
         return False
 
     return True
@@ -234,16 +234,16 @@ def run_vcapture_tests():
         result = runner.run(suite)
 
         if result.wasSuccessful():
-            print("✓ All vcapture tests PASSED!")
+            print("[OK] All vcapture tests PASSED!")
             return True
         else:
             print(
-                f"✗ vcapture tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
+                f"[FAIL] vcapture tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
             )
             return False
 
     except Exception as e:
-        print(f"✗ vcapture test execution failed: {e}")
+        print(f"[FAIL] vcapture test execution failed: {e}")
         return False
 
 
@@ -272,16 +272,16 @@ def run_rtsp_feed_tests():
         result = runner.run(suite)
 
         if result.wasSuccessful():
-            print("✓ All rtsp_feed tests PASSED!")
+            print("[OK] All rtsp_feed tests PASSED!")
             return True
         else:
             print(
-                f"✗ rtsp_feed tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
+                f"[FAIL] rtsp_feed tests FAILED: {len(result.failures)} failures, {len(result.errors)} errors"
             )
             return False
 
     except Exception as e:
-        print(f"✗ rtsp_feed test execution failed: {e}")
+        print(f"[FAIL] rtsp_feed test execution failed: {e}")
         return False
 
 
@@ -310,12 +310,12 @@ def main():
 
     print("\n" + "=" * 60)
     if success:
-        print("🎉 ALL TESTS PASSED!")
+        print("[OK] ALL TESTS PASSED!")
         print("\nFor more comprehensive testing, install pytest and run:")
         print("  pip install pytest")
         print("  python -m pytest tests/ -v")
     else:
-        print("❌ SOME TESTS FAILED!")
+        print("[FAIL] SOME TESTS FAILED!")
         print("Check the error messages above for details.")
     print("=" * 60)
 

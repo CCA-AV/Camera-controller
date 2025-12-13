@@ -4,3 +4,4 @@
 !*.cam
 Old_code/*
 !.gitignore
+!cameras.json
