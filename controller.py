@@ -99,10 +99,11 @@ class Camera:
 
     def run(self, command):
         result = self.execute(command)
-        print(result, self.parser.interpret_completion(result))
+        # print(result, self.parser.interpret_completion(result))
         while self.parser.interpret_completion(result) == "Command Accepted":
             result = self.check()
-            print("r", result, self.parser.interpret_completion(result))
+            time.sleep(0.1)
+            #print("r", result, self.parser.interpret_completion(result))
         return self.parser.interpret_completion(result)
 
     def inquire(self, command):
@@ -201,6 +202,10 @@ class Camera:
         # Note: zoom method will handle cache update based on its success
 
     @property
+    def pan_tilt_pos(self):
+        return self.inquire(self.commands["inq"]["pan_tilt_pos"])
+
+    @property
     def focus_pos(self):
         return self.inquire(self.commands["inq"]["focus_pos"])
 
@@ -279,10 +284,231 @@ class Camera:
         # If focus direct command was successful, update cache
         if result == "Command Completed" and _type == "direct":
             self._update_cache(self.commands["inq"]["focus_pos"], val)
-        if result == "Command Completed" and _type == "direct":
-            self._update_cache(self.commands["inq"]["focus_pos"], val)
 
+    def focus_mode(self, mode=None):
+        if mode:
+            command = self.build_command(f"focus_mode_{mode}")            
+        else:
+            command = self.build_command(f"af_toggle")
+        
+        result = self.run(command)
 
+    def move(self, _type="abs", pan=-1, tilt=-1, pan_speed=10, tilt_speed=10):
+        """
+        move(type, value)
+
+        type = "direct":
+            MIN: 0
+            MAX: 65535  [HEX]
+                    OR
+                 1770 [DEC]
+
+        type = "relative":
+            MIN: 0
+            MAX: 65535
+        """
+        old_pan_tilt = self.inquire(self.commands["inq"]["pan_tilt_pos"])
+        command = self.build_command(f"pan_direct_{_type}", pan_speed, tilt_speed, pan, tilt)
+
+        result = self.run(command)
+
+        # If focus direct command was successful, update cache
+        if result == "Command Completed" and _type == "abs":
+            self._update_cache(self.commands["inq"]["pan_tilt_pos"], [pan,tilt])
+        elif result == "Command Completed" and _type == "rel":
+            self._update_cache(self.commands["inq"]["pan_tilt_pos"], [pan+old_pan_tilt[0],tilt+old_pan_tilt[1]])
+
+    
+    def pan(self, _type="abs", pan=-1, pan_speed=10):
+        """
+        pan(type, value)
+
+        type = "direct":
+            MIN: 0
+            MAX: 65535  [HEX]
+                    OR
+                 1770 [DEC]
+
+        type = "relative":
+            MIN: 0
+            MAX: 65535
+        """
+        self.move(_type, pan_speed=pan_speed, pan=pan, tilt=self.inquire(self.commands["inq"]["pan_tilt_pos"][1]))
+
+    def tilt(self, _type="abs", tilt=-1, tilt_speed=10):
+        """
+        pan(type, value)
+
+        type = "direct":
+            MIN: 0
+            MAX: 65535  [HEX]
+                    OR
+                 1770 [DEC]
+
+        type = "relative":
+            MIN: 0
+            MAX: 65535
+        """
+        self.move(_type, tilt_speed=tilt_speed, tilt=tilt, pan=self.inquire(self.commands["inq"]["pan_tilt_pos"][0]))
+
+    def pan_up(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_up_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_up_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_up_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down_left(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down_left", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_down_right(self, pan_speed, tilt_speed):
+        """
+        pan_speed:
+            MIN: 0
+            MAX: 255
+        tilt_speed:
+            MIN: 0
+            MAX: 255
+        """
+        
+        command = self.build_command(f"pan_down_right", pan_speed, tilt_speed)
+
+        result = self.run(command)
+
+    def pan_stop(self):
+        command = self.build_command(f"pan_stop", 0, 0)
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["pan_tilt_pos"], self.inquire(self.commands["inq"]["pan_tilt_pos"]))
+
+    def zoom_stop(self):
+        command = self.build_command("zoom_stop")
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["zoom_pos"], self.inquire(self.commands["inq"]["zoom_pos"]))
+
+    def focus_stop(self):
+        command = self.build_command("focus_stop")
+
+        result = self.run(command)
+        
+        if result == "Command Completed":
+            self._update_cache(self.commands["inq"]["focus_pos"], self.inquire(self.commands["inq"]["focus_pos"]))
+
+    
+    def preset_set(self, preset):        
+        command = self.build_command(f"preset_set", preset)
+
+        result = self.run(command)
+        
+    
+    def preset_recall(self, preset):
+        """
+        "preset_recall": {
+        "command": "8101043f02pff",
+        "parameters": [
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+        ],
+        },  # PP mem number (0-127)
+        """
+        
+        command = self.build_command(f"preset_recall", preset)
+        
+        result = self.run(command)
+        
+        
 if __name__ == "__main__":
     cam = Camera()
     # cam.off()
@@ -290,9 +516,4 @@ if __name__ == "__main__":
     # cam.on()
 
     print(cam.power)
-    print("fp,", cam.focus_pos)
-    cam.zoom_pos = "2080309"
-    print("xp,", cam.zoom_pos)
-    print("fp,", cam.focus_pos)
-    cam.focus_pos = 850
-    print("fp,", cam.focus_pos)
+    print("pos,", cam.pan_tilt_pos)

@@ -28,6 +28,9 @@ commands = {
             }
         ],
     },
+    "af_toggle": {"command": "8101043810ff", "parameters": []},
+    "focus_mode_auto": {"command": "8101043802ff", "parameters": []},
+    "focus_mode_manual": {"command": "8101043803ff", "parameters": []},
     "focus_stop": {"command": "8101040800ff", "parameters": []},
     "focus_far_std": {"command": "8101040802ff", "parameters": []},
     "focus_near_std": {"command": "8101040803ff", "parameters": []},
@@ -356,25 +359,25 @@ commands = {
     "preset_reset": {
         "command": "8101043f00pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_set": {
         "command": "8101043f01pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_recall": {
         "command": "8101043f02pff",
         "parameters": [
-            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 1},
+            {"name": "preset_number", "type": "int", "min": 0, "max": 127, "length": 2},
         ],
     },  # PP mem number (0-127)
     "preset_recall_speed": {
         "command": "81010601pff",
         "parameters": [
-            {"name": "speed_grade", "type": "int", "min": 1, "max": 24, "length": 1},
+            {"name": "speed_grade", "type": "int", "min": 1, "max": 24, "length": 2},
         ],
     },  # PP speed grade, 0x01~0x18
     "backlight": {
