@@ -92,18 +92,21 @@ class Camera:
         return self.socket.recv(256).hex()
 
     def check(self):
-        data = bytes.fromhex("")
-        self.socket.send(data)
+        return self.execute("")
 
-        return self.socket.recv(256).hex()
+    def run(self, command, timeout=10):
+        executed = False
+        start_time = time.time()
+        while not executed:
+            result = self.execute(command)
+            while self.parser.interpret_completion(result) == "Command Accepted" and (
+                timeout is None or time.time() - start_time < timeout
+            ):
+                result = self.check()
+                time.sleep(0.1)
+            if self.parser.interpret_completion(result) == "Command Completed":
+                executed = True
 
-    def run(self, command):
-        result = self.execute(command)
-        # print(result, self.parser.interpret_completion(result))
-        while self.parser.interpret_completion(result) == "Command Accepted":
-            result = self.check()
-            time.sleep(0.1)
-            # print("r", result, self.parser.interpret_completion(result))
         return self.parser.interpret_completion(result)
 
     def inquire(self, command):
@@ -481,7 +484,7 @@ class Camera:
     def pan_stop(self):
         command = self.build_command("pan_stop", 0, 0)
 
-        result = self.run(command)
+        result = self.run(command, timeout=0.2)
 
         if result == "Command Completed":
             self._update_cache(
@@ -492,7 +495,7 @@ class Camera:
     def zoom_stop(self):
         command = self.build_command("zoom_stop")
 
-        result = self.run(command)
+        result = self.run(command, timeout=0.2)
 
         if result == "Command Completed":
             self._update_cache(
@@ -503,7 +506,7 @@ class Camera:
     def focus_stop(self):
         command = self.build_command("focus_stop")
 
-        result = self.run(command)
+        result = self.run(command, timeout=0.2)
 
         if result == "Command Completed":
             self._update_cache(

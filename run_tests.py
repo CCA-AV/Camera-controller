@@ -48,44 +48,47 @@ def run_basic_tests():
     # Create a simple test to verify mocking works
     try:
         with patch("socket.socket") as mock_socket_class:
-            mock_socket = Mock()
-            mock_socket.recv.return_value = bytes.fromhex("9041ff")
-            mock_socket_class.return_value = mock_socket
-
-            from controller import Camera
-
-            cam = Camera()
-
-            # Test that camera initializes with mock
-            assert cam.socket == mock_socket
-            assert mock_socket.connect.called
-            print("[OK] Camera initialization with mock socket: PASSED")
-
-            # Test basic command execution
-            result = cam.execute("8101040002ff")
-            assert result == "9041ff"
-            print("[OK] Basic command execution: PASSED")
-
-            # Test power on command
-            with patch.object(cam, "run") as mock_run:
-                cam.on()
-                mock_run.assert_called_once()
-                print("[OK] Power on command: PASSED")
-
-            # Test zoom command with parameter substitution
-            with patch.object(cam, "run") as mock_run:
-                cam.zoom("direct", 1000)
-                # Verify the run method was called (actual command validation in full tests)
-                mock_run.assert_called_once()
-                print("[OK] Zoom command with parameters: PASSED")
-
-            print("\n[OK] All basic tests PASSED!")
-
+            _test_with_mocks(mock_socket_class)
     except Exception as e:
         print(f"[FAIL] Basic test failed: {e}")
         return False
 
     return True
+
+
+def _test_with_mocks(mock_socket_class):
+    mock_socket = Mock()
+    mock_socket.recv.return_value = bytes.fromhex("9041ff")
+    mock_socket_class.return_value = mock_socket
+
+    from controller import Camera
+
+    cam = Camera()
+
+    # Test that camera initializes with mock
+    assert cam.socket == mock_socket
+    assert mock_socket.connect.called
+    print("[OK] Camera initialization with mock socket: PASSED")
+
+    # Test basic command execution
+    result = cam.execute("8101040002ff")
+    assert result == "9041ff"
+    print("[OK] Basic command execution: PASSED")
+
+    # Test power on command
+    with patch.object(cam, "run") as mock_run:
+        cam.on()
+        mock_run.assert_called_once()
+        print("[OK] Power on command: PASSED")
+
+    # Test zoom command with parameter substitution
+    with patch.object(cam, "run") as mock_run:
+        cam.zoom("direct", 1000)
+        # Verify the run method was called (actual command validation in full tests)
+        mock_run.assert_called_once()
+        print("[OK] Zoom command with parameters: PASSED")
+
+    print("\n[OK] All basic tests PASSED!")
 
 
 def run_visca_validation():
@@ -95,121 +98,121 @@ def run_visca_validation():
     print("=" * 60)
 
     try:
-        from controller import Camera
-        from visca import ViscaParser
-        import inspect
-
-        # Get the default camera type from Camera class constructor
-        camera_signature = inspect.signature(Camera.__init__)
-        default_camera_type = camera_signature.parameters["camera_type"].default
-        print(f"[OK] Using camera type: {default_camera_type}")
-
-        # Create ViscaParser with the default camera type
-        parser = ViscaParser(default_camera_type)
-        commands = parser.commands
-        returns = parser.returns
-
-        # Test command format validation
-        command_count = 0
-        for command_name, command_data in commands.items():
-            if (
-                isinstance(command_data, dict) and "command" in command_data
-            ):  # New dict format
-                command_hex = command_data["command"]
-                assert command_hex.startswith(
-                    "81"
-                ), f"Command {command_name} should start with 81"
-                assert command_hex.endswith(
-                    "ff"
-                ), f"Command {command_name} should end with ff"
-                # Skip length check for template commands that contain placeholders
-                if not any(
-                    placeholder in command_hex
-                    for placeholder in [
-                        "p",
-                        "q",
-                        "r",
-                        "s",
-                        "P",
-                        "Q",
-                        "R",
-                        "S",
-                        "V",
-                        "W",
-                        "A",
-                        "B",
-                        "C",
-                        "D",
-                        "T",
-                    ]
-                ):
-                    assert (
-                        len(command_hex) % 2 == 0
-                    ), f"Command {command_name} should have even length (valid hex)"
-                command_count += 1
-            elif isinstance(command_data, str):  # Legacy string format (skip for now)
-                pass  # Skip string commands - they're legacy or special cases
-
-        print(f"[OK] Validated {command_count} VISCA commands format")
-
-        # Test inquiry command format validation
-        inquiry_count = 0
-        for command_name, command_hex in commands["inq"].items():
-            if command_hex:  # Skip empty commands
-                # Some special commands may start with different prefixes
-                if command_name not in ["enlargement_block"]:  # Special case
-                    assert command_hex.startswith(
-                        "8109"
-                    ), f"Inquiry {command_name} should start with 8109"
-                assert command_hex.endswith(
-                    "ff"
-                ), f"Inquiry {command_name} should end with ff"
-                # Skip length check for template commands that contain placeholders
-                if not any(
-                    placeholder in command_hex
-                    for placeholder in [
-                        "p",
-                        "q",
-                        "r",
-                        "s",
-                        "P",
-                        "Q",
-                        "R",
-                        "S",
-                        "V",
-                        "W",
-                        "A",
-                        "B",
-                        "C",
-                        "D",
-                        "T",
-                    ]
-                ):
-                    assert (
-                        len(command_hex) % 2 == 0
-                    ), f"Inquiry {command_name} should have even length"
-                inquiry_count += 1
-
-        print(f"[OK] Validated {inquiry_count} VISCA inquiry commands format")
-
-        # Test parameter substitution using the command builder
-        from controller import Camera
-
-        cam = Camera()
-        test_result = cam.build_command("zoom_direct", 1000)  # Simple test value
-        expected = "81010447000003e8ff"  # 1000 in hex = 3e8, padded to 8 chars
-        assert (
-            test_result == expected
-        ), f"Parameter substitution failed: {test_result} != {expected}"
-        print("[OK] Parameter substitution validation: PASSED")
-
-        print("\n[OK] All VISCA validation tests PASSED!")
-
+        _command_validation()
     except Exception as e:
         print(f"[FAIL] VISCA validation failed: {e}")
         return False
 
     return True
+
+
+def _command_validation():
+    from controller import Camera
+    from visca import ViscaParser
+    import inspect
+
+    # Get the default camera type from Camera class constructor
+    camera_signature = inspect.signature(Camera.__init__)
+    default_camera_type = camera_signature.parameters["camera_type"].default
+    print(f"[OK] Using camera type: {default_camera_type}")
+
+    # Create ViscaParser with the default camera type
+    parser = ViscaParser(default_camera_type)
+    commands = parser.commands
+    returns = parser.returns
+
+    # Test command format validation
+    command_count = 0
+    for command_name, command_data in commands.items():
+        if (
+            isinstance(command_data, dict) and "command" in command_data
+        ):  # New dict format
+            command_hex = command_data["command"]
+            assert command_hex.startswith(
+                "81"
+            ), f"Command {command_name} should start with 81"
+            assert command_hex.endswith(
+                "ff"
+            ), f"Command {command_name} should end with ff"
+            # Skip length check for template commands that contain placeholders
+            if all(
+                placeholder not in command_hex
+                for placeholder in [
+                    "p",
+                    "q",
+                    "r",
+                    "s",
+                    "P",
+                    "Q",
+                    "R",
+                    "S",
+                    "V",
+                    "W",
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "T",
+                ]
+            ):
+                assert (
+                    len(command_hex) % 2 == 0
+                ), f"Command {command_name} should have even length (valid hex)"
+            command_count += 1
+    print(f"[OK] Validated {command_count} VISCA commands format")
+
+    # Test inquiry command format validation
+    inquiry_count = 0
+    for command_name, command_hex in commands["inq"].items():
+        if command_hex:  # Skip empty commands
+            # Some special commands may start with different prefixes
+            if command_name not in ["enlargement_block"]:  # Special case
+                assert command_hex.startswith(
+                    "8109"
+                ), f"Inquiry {command_name} should start with 8109"
+            assert command_hex.endswith(
+                "ff"
+            ), f"Inquiry {command_name} should end with ff"
+            # Skip length check for template commands that contain placeholders
+            if all(
+                placeholder not in command_hex
+                for placeholder in [
+                    "p",
+                    "q",
+                    "r",
+                    "s",
+                    "P",
+                    "Q",
+                    "R",
+                    "S",
+                    "V",
+                    "W",
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "T",
+                ]
+            ):
+                assert (
+                    len(command_hex) % 2 == 0
+                ), f"Inquiry {command_name} should have even length"
+            inquiry_count += 1
+
+    print(f"[OK] Validated {inquiry_count} VISCA inquiry commands format")
+
+    # Test parameter substitution using the command builder
+    from controller import Camera
+
+    cam = Camera()
+    test_result = cam.build_command("zoom_direct", 1000)  # Simple test value
+    expected = "81010447000003e8ff"  # 1000 in hex = 3e8, padded to 8 chars
+    assert (
+        test_result == expected
+    ), f"Parameter substitution failed: {test_result} != {expected}"
+    print("[OK] Parameter substitution validation: PASSED")
+
+    print("\n[OK] All VISCA validation tests PASSED!")
 
 
 def run_vcapture_tests():

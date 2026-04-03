@@ -114,15 +114,14 @@ class TestViscaIntegration:
                 ):
                     camera.focus(*args)
                     # For focus direct, we need to handle the character replacement
-                    if args[0] == "direct":
-                        if isinstance(args[1], int):
-                            hex_val = f"{args[1]:04x}"
-                            expected_command = (
-                                "810104480.0.0.0.ff".replace(".", hex_val[0], 1)
-                                .replace(".", hex_val[1], 1)
-                                .replace(".", hex_val[2], 1)
-                                .replace(".", hex_val[3], 1)
-                            )
+                    if args[0] == "direct" and isinstance(args[1], int):
+                        hex_val = f"{args[1]:04x}"
+                        expected_command = (
+                            "810104480.0.0.0.ff".replace(".", hex_val[0], 1)
+                            .replace(".", hex_val[1], 1)
+                            .replace(".", hex_val[2], 1)
+                            .replace(".", hex_val[3], 1)
+                        )
                     mock_execute.assert_called_with(expected_command)
 
     def test_backlight_commands_generate_correct_visca(self, camera):
@@ -133,19 +132,19 @@ class TestViscaIntegration:
             with patch.object(
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
-                camera.backlight = True
-                expected_command = camera.build_command("backlight", backlight=2)
-                mock_execute.assert_called_with(expected_command)
-
+                self._set_backlight(True, camera, 2, mock_execute)
         # Test backlight off
         with patch.object(camera, "execute") as mock_execute:
             mock_execute.return_value = "9041ff"
             with patch.object(
                 camera.parser, "interpret_completion", return_value="Command Completed"
             ):
-                camera.backlight = False
-                expected_command = camera.build_command("backlight", backlight=3)
-                mock_execute.assert_called_with(expected_command)
+                self._set_backlight(False, camera, 3, mock_execute)
+
+    def _set_backlight(self, arg0, camera, backlight, mock_execute):
+        camera.backlight = arg0
+        expected_command = camera.build_command("backlight", backlight=backlight)
+        mock_execute.assert_called_with(expected_command)
 
     def test_inquiry_commands_generate_correct_visca(self, camera):
         """Test that inquiry commands generate correct VISCA hex strings"""
@@ -186,8 +185,8 @@ class TestViscaIntegration:
                     "ff"
                 ), f"Command {command_name} should end with ff"
                 # Skip length check for template commands that contain placeholders
-                if not any(
-                    placeholder in command_hex
+                if all(
+                    placeholder not in command_hex
                     for placeholder in ["p", "q", "r", "s", "P", "V", "W"]
                 ):
                     assert (
@@ -208,8 +207,8 @@ class TestViscaIntegration:
                     "ff"
                 ), f"Inquiry {command_name} should end with ff"
                 # Skip length check for template commands
-                if not any(
-                    placeholder in command_hex
+                if all(
+                    placeholder not in command_hex
                     for placeholder in ["p", "q", "r", "s", "P"]
                 ):
                     assert (

@@ -8,6 +8,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from controller import Camera
+from cameras import ptzoptics, testcamera
 
 
 class TestCamera:
@@ -423,6 +424,23 @@ class TestCameraEdgeCases:
             camera.focus("near", 7)
             expected_command = camera.build_command("focus_near_var", 7)
             mock_run.assert_called_with(expected_command)
+
+
+class TestTestCameraType:
+    def test_testcamera_command_tables_match_ptzoptics(self):
+        assert testcamera.commands == ptzoptics.commands
+        assert testcamera.returns == ptzoptics.returns
+        assert testcamera.results == ptzoptics.results
+
+    def test_testcamera_initialization_uses_simulated_socket(self):
+        cam = Camera(ip="127.0.0.1", camera_type="testcamera")
+        try:
+            # Socket-like simulator object should expose send/recv/close for Camera
+            assert hasattr(cam.socket, "send")
+            assert hasattr(cam.socket, "recv")
+            assert hasattr(cam.socket, "close")
+        finally:
+            cam.close()
 
 
 if __name__ == "__main__":
