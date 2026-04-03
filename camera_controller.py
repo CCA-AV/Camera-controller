@@ -602,7 +602,7 @@ if __name__ == "__main__":
     cap.start()
     img = ntk.image_manager.Image(_object=frame_container, image=None)
 
-    while cap.running:
+    while True:
         try:
             frame_time1 = time()
             frame = cap.current_frame
