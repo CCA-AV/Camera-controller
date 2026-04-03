@@ -11,13 +11,11 @@ import contextlib
 
 
 def close():
-    _cap = globals().get("cap")
-    if _cap:
+    if _cap := globals().get("cap"):
         with contextlib.suppress(Exception):
             _cap.release()
 
-    _ptz_cam = globals().get("ptz_cam")
-    if _ptz_cam:
+    if _ptz_cam := globals().get("ptz_cam"):
         with contextlib.suppress(Exception):
             _ptz_cam.close()
     cv2.destroyAllWindows()
@@ -259,7 +257,7 @@ if __name__ == "__main__":
         command=lambda: ptz_cam.zoom("wide"),
         command_off=lambda: ptz_cam.zoom_stop(),
     ).place(75, 210)
-    zoom_lbl = ntk.Label(window, text="Zoom", height=15,width=50).place(50,260)
+    zoom_lbl = ntk.Label(window, text="Zoom", height=15, width=50).place(50, 260)
 
     focus_in_btn = ntk.Button(
         window,
@@ -277,7 +275,7 @@ if __name__ == "__main__":
         command=lambda: ptz_cam.focus("near"),
         command_off=lambda: ptz_cam.focus_stop(),
     ).place(225, 210)
-    focus_lbl = ntk.Label(window, text="Focus", height=15,width=50).place(200,260)
+    focus_lbl = ntk.Label(window, text="Focus", height=15, width=50).place(200, 260)
 
     names = [
         "Band",
@@ -355,7 +353,7 @@ if __name__ == "__main__":
                 # print(im.size)
                 img = ntk.image_manager.Image(image=im)
                 img.resize(width=300, height=150)
-                frame_container.image=img
+                frame_container.image = img
                 frame_container.update()
 
             frame_time3 = time()
