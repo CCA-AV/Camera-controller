@@ -94,7 +94,7 @@ class Camera:
     def check(self):
         return self.execute("")
 
-    def run(self, command, timeout=None):
+    def run(self, command, timeout=10):
         executed = False
         start_time = time.time()
         while not executed:
