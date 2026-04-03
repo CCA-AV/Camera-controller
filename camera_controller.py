@@ -47,7 +47,7 @@ atexit.register(close)
 win32api.SetConsoleCtrlHandler(console_ctrl_handler, True)
 
 if __name__ == "__main__":
-    window = ntk.Window(width=300, height=600, closing_command=close).place()
+    window = ntk.Window(width=300, height=600, closing_command=close).place(y=30)
 
     PAN_SPEED = 7
     TILT_SPEED = 7
@@ -280,10 +280,10 @@ if __name__ == "__main__":
     focus_lbl = ntk.Label(window, text="Focus", height=15,width=50).place(200,260)
 
     names = [
-        "Piano",
-        "Stage Lyrics",
+        "Band",
+        "Speaker R",
         "Speaker",
-        "Announcements",
+        "Speaker L",
         "Stage no Lyrics",
         "Worship Leader",
         "Wide Shot Left",
@@ -353,13 +353,10 @@ if __name__ == "__main__":
                 # cv2.imshow('frame',frame)
                 im = Image.fromarray(frame, "RGB")
                 # print(im.size)
-                img = ntk.image_manager.Image(_object=frame_container, image=im)
+                img = ntk.image_manager.Image(image=im)
                 img.resize(width=300, height=150)
-                new_frame_container = ntk.Frame(
-                    window, width=300, height=150, image=img
-                ).place(0, 450)
-                frame_container.destroy()
-                frame_container = new_frame_container
+                frame_container.image=img
+                frame_container.update()
 
             frame_time3 = time()
         except KeyboardInterrupt:

@@ -28,6 +28,20 @@ commands = {
             }
         ],
     },
+    "dzoom_on": {
+        "command": "8101040602ff",
+        "parameters": [],
+    },
+    "dzoom_off": {
+        "command": "8101040603ff",
+        "parameters": [],
+    },
+    "dzoom_limit": {
+        "command": "810104260pff",
+        "parameters": [
+            {"name":"limit", "type":"int","min":0,"max":15,"length":1}
+        ],
+    },
     "af_toggle": {"command": "8101043810ff", "parameters": []},
     "focus_mode_auto": {"command": "8101043802ff", "parameters": []},
     "focus_mode_manual": {"command": "8101043803ff", "parameters": []},

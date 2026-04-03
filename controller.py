@@ -532,10 +532,8 @@ class Camera:
 
 
 if __name__ == "__main__":
-    cam = Camera()
+    cam = Camera("192.168.0.25")
     # cam.off()
 
     # cam.on()
-
-    print(cam.power)
-    print("pos,", cam.pan_tilt_pos)
+    cam.preset_recall(0)
