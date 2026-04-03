@@ -45,7 +45,12 @@ atexit.register(close)
 win32api.SetConsoleCtrlHandler(console_ctrl_handler, True)
 
 if __name__ == "__main__":
-    window = ntk.Window(width=300, height=600, closing_command=close).place(y=30)
+    defaults_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "defaults_dark.py"
+    )
+    window = ntk.Window(
+        width=300, height=600, closing_command=close, defaults_file=defaults_file
+    ).place(y=30)
 
     PAN_SPEED = 7
     TILT_SPEED = 7
@@ -153,6 +158,7 @@ if __name__ == "__main__":
             text=f"Camera {i+1}",
             height=25,
             width=75,
+            style="button_neutral",
             command=lambda i=i: switch_camera(i),
         ).place(75 * i, 0)
 
@@ -161,6 +167,7 @@ if __name__ == "__main__":
         text="←",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_left(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(75, 100)
@@ -169,6 +176,7 @@ if __name__ == "__main__":
         text="→",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_right(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(175, 100)
@@ -178,6 +186,7 @@ if __name__ == "__main__":
         text="←",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_left(PAN_SPEED * 2, TILT_SPEED * 2),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(25, 100)
@@ -186,6 +195,7 @@ if __name__ == "__main__":
         text="→",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_right(PAN_SPEED * 2, TILT_SPEED * 2),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(225, 100)
@@ -195,6 +205,7 @@ if __name__ == "__main__":
         text="↑",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_up(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(125, 50)
@@ -203,6 +214,7 @@ if __name__ == "__main__":
         text="↓",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_down(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(125, 150)
@@ -212,6 +224,7 @@ if __name__ == "__main__":
         text="↖",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_up_left(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(75, 50)
@@ -220,6 +233,7 @@ if __name__ == "__main__":
         text="↗",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_up_right(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(175, 50)
@@ -229,6 +243,7 @@ if __name__ == "__main__":
         text="↙",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_down_left(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(75, 150)
@@ -237,6 +252,7 @@ if __name__ == "__main__":
         text="↘",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.pan_down_right(PAN_SPEED, TILT_SPEED),
         command_off=lambda: ptz_cam.pan_stop(),
     ).place(175, 150)
@@ -246,6 +262,7 @@ if __name__ == "__main__":
         text="+",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.zoom("tele"),
         command_off=lambda: ptz_cam.zoom_stop(),
     ).place(25, 210)
@@ -254,16 +271,20 @@ if __name__ == "__main__":
         text="-",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.zoom("wide"),
         command_off=lambda: ptz_cam.zoom_stop(),
     ).place(75, 210)
-    zoom_lbl = ntk.Label(window, text="Zoom", height=15, width=50).place(50, 260)
+    zoom_lbl = ntk.Label(
+        window, text="Zoom", height=15, width=50, style="label_transparent"
+    ).place(50, 260)
 
     focus_in_btn = ntk.Button(
         window,
         text="+",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.focus("far"),
         command_off=lambda: ptz_cam.focus_stop(),
     ).place(175, 210)
@@ -272,10 +293,13 @@ if __name__ == "__main__":
         text="-",
         height=50,
         width=50,
+        style="button_neutral",
         command=lambda: ptz_cam.focus("near"),
         command_off=lambda: ptz_cam.focus_stop(),
     ).place(225, 210)
-    focus_lbl = ntk.Label(window, text="Focus", height=15, width=50).place(200, 260)
+    focus_lbl = ntk.Label(
+        window, text="Focus", height=15, width=50, style="label_transparent"
+    ).place(200, 260)
 
     names = [
         "Band",
@@ -291,9 +315,9 @@ if __name__ == "__main__":
     img = "Images/"
     # Preset buttons
 
-    set_btn = ntk.Button(window, text="Set", mode="toggle", height=25, width=40).place(
-        0, 275
-    )
+    set_btn = ntk.Button(
+        window, text="Set", mode="toggle", height=25, width=40, style="button_accent"
+    ).place(0, 275)
 
     def toggle_focus():
         if not af_btn.state:
@@ -307,6 +331,7 @@ if __name__ == "__main__":
         mode="toggle",
         height=25,
         width=75,
+        style="button_accent",
         command=toggle_focus,
     ).place(225, 275)
     if int(ptz_cam.inquire(ptz_cam.commands["inq"]["focus_mode"])[0]) == 2:
@@ -326,14 +351,16 @@ if __name__ == "__main__":
             window,
             text=f"{names[i]}",
             image=f"{img}{i+1}.jpg",
-            text_color="white",
-            font=("Arial", 9),
+            text_color="default",
+            font="default",
             height=50,
             width=100,
             command=lambda i=i: set_recall(i + 1),
         ).place(x, y)
 
-    frame_container = ntk.Frame(window, width=300, height=150).place(0, 450)
+    frame_container = ntk.Frame(window, width=300, height=150, style="surface").place(
+        0, 450
+    )
 
     count = 0
     cap = vcapture(_active_rtsp_url)  # hd rtsp stream 1, sd 2
