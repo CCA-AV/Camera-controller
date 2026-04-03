@@ -8,6 +8,7 @@ import cv2
 import json
 import os
 import contextlib
+from camera_streams import stream_url_for_camera
 
 
 def close():
@@ -92,13 +93,13 @@ if __name__ == "__main__":
                 continue
             ip = cam.get("ip")
             cam_type = cam.get("type") or cam.get("camera_type") or "ptzoptics"
+            stream_url = cam.get("stream_url")
             if isinstance(ip, str) and ip.strip():
-                normalized.append({"ip": ip.strip(), "type": str(cam_type)})
+                normalized_cam = {"ip": ip.strip(), "type": str(cam_type)}
+                if isinstance(stream_url, str) and stream_url.strip():
+                    normalized_cam["stream_url"] = stream_url.strip()
+                normalized.append(normalized_cam)
         return normalized
-
-    def _rtsp_url_for_ip(ip: str) -> str:
-        # Existing behavior uses the SD stream "/2"
-        return f"rtsp://{ip}:554/2"
 
     cameras = _load_cameras()
 
@@ -106,11 +107,13 @@ if __name__ == "__main__":
     if cameras:
         _active_index = 0
         ptz_cam = Camera(ip=cameras[0]["ip"], camera_type=cameras[0]["type"])
-        _active_rtsp_url = _rtsp_url_for_ip(cameras[0]["ip"])
+        _active_rtsp_url = stream_url_for_camera(cameras[0])
     else:
         _active_index = None
         ptz_cam = Camera(ip="192.168.0.126")
-        _active_rtsp_url = _rtsp_url_for_ip("192.168.0.126")
+        _active_rtsp_url = stream_url_for_camera(
+            {"ip": "192.168.0.126", "type": "ptzoptics"}
+        )
 
     def switch_camera(index: int):
         """
@@ -144,8 +147,8 @@ if __name__ == "__main__":
         # Swap PTZ camera object
         ptz_cam = Camera(ip=new_ip, camera_type=new_type)
 
-        # Start new RTSP feed
-        _active_rtsp_url = _rtsp_url_for_ip(new_ip)
+        # Start new feed URL (RTSP by default, synthetic stream for testcamera)
+        _active_rtsp_url = stream_url_for_camera(cam_cfg)
         cap = vcapture(_active_rtsp_url)
         cap.start()
 
@@ -312,7 +315,7 @@ if __name__ == "__main__":
         "Wide Shot Center",
         "Wide Shot Right",
     ]
-    img = "Images/"
+    preset_images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Images")
     # Preset buttons
 
     set_btn = ntk.Button(
@@ -347,15 +350,21 @@ if __name__ == "__main__":
         y = 250 + 50 * ((i + 3) // 3)
         x_offset = 2 if (i + 1) % 3 == 0 else (i + 1) % 3 - 1
         x = 100 * x_offset
+        button_kwargs = {
+            "text_color": "default",
+            "font": "default",
+            "height": 50,
+            "width": 100,
+            "command": lambda i=i: set_recall(i + 1),
+        }
+        image_path = os.path.join(preset_images_dir, f"{i+1}.jpg")
+        if os.path.exists(image_path):
+            button_kwargs["image"] = image_path
+
         ntk.Button(
             window,
             text=f"{names[i]}",
-            image=f"{img}{i+1}.jpg",
-            text_color="default",
-            font="default",
-            height=50,
-            width=100,
-            command=lambda i=i: set_recall(i + 1),
+            **button_kwargs,
         ).place(x, y)
 
     frame_container = ntk.Frame(window, width=300, height=150, style="surface").place(
